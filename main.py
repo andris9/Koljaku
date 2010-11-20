@@ -13,8 +13,12 @@ from google.appengine.ext.webapp import template
 import os
 import urllib
 
-
-
+class Book(db.Model):
+  user = db.UserProperty()
+  added = db.DateTimeProperty(auto_now_add = True)
+  updated = db.DateTimeProperty(auto_now = True)
+  title = db.StringProperty()
+  body = db.TextProperty()
 
 def gen_template_values(http):
     template_values = {
@@ -35,6 +39,24 @@ class MainHandler(webapp.RequestHandler):
     def get(self):
         template_values = gen_template_values(self)
         path = os.path.join(os.path.dirname(__file__), 'views/front.html')
+        self.response.out.write(template.render(path, template_values))
+
+class BookListHandler(webapp.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if not user:
+            return errorNotLoggedIn(self)
+
+        query = Book.all()
+        query.filter("user =", user)
+        query.order("-updated")
+
+        books = query.fetch(100)
+
+        template_values = gen_template_values(self)
+        template_values["books"] = books
+        
+        path = os.path.join(os.path.dirname(__file__), 'views/books.html')
         self.response.out.write(template.render(path, template_values))
 
 class LoggedHandler(webapp.RequestHandler):
@@ -79,7 +101,8 @@ def main():
     application = webapp.WSGIApplication([('/', MainHandler),
                                           ('/login', LoginHandler),
                                           ('/logout', LogoutHandler),
-                                          ('/logged', LoggedHandler)],
+                                          ('/logged', LoggedHandler),
+                                          ('/books', BookListHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 

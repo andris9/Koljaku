@@ -1,0 +1,16 @@
+{% extends "main.html" %}
+
+
+{% block title %}Books{% endblock %}
+
+{% block body %}
+
+<h1>Books</h1>
+
+{% if books %}
+
+{% else %}
+<p>No books!</p>
+{% endif %}
+
+{% endblock %}
