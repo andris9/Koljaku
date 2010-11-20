@@ -1,0 +1,2 @@
+# Robots Exclusion Standard file
+# read more from http://www.robotstxt.org/wc/exclusion.html
