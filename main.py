@@ -12,6 +12,9 @@ from google.appengine.ext import db
 from google.appengine.ext.webapp import template
 import os
 import urllib
+import markdown2
+import html2markdown
+import re
 
 class Book(db.Model):
   user = db.UserProperty()
@@ -37,7 +40,17 @@ def errorNotLoggedIn(http):
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
+        
+        f = open('gae.html', 'r')
+        html = f.read().decode("utf-8")
+        
+        html = html2markdown.html2text(html)
+        html = markdown2.markdown(html)
+        
+        #/<p class="preformatted_text" -> pre/
+        
         template_values = gen_template_values(self)
+        template_values["html"] = html
         path = os.path.join(os.path.dirname(__file__), 'views/front.html')
         self.response.out.write(template.render(path, template_values))
 
