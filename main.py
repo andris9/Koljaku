@@ -19,7 +19,7 @@ from google.appengine.api import memcache
 import logging
 import math
 
-ON_PAGE = 4
+ON_PAGE = 20
 
 class SiteUser(db.Model):
   user = db.UserProperty()
