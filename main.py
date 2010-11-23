@@ -31,6 +31,12 @@ class Book(db.Model):
   added = db.DateTimeProperty(auto_now_add = True)
   updated = db.DateTimeProperty(auto_now = True)
   title = db.StringProperty()
+  chapters = db.TextProperty()
+
+class Chapter(db.Model):
+  book = db.ReferenceProperty(reference_class = Book, default = None)
+  title = db.StringProperty()
+
 
 def get_user(user = None):
     if not user:
@@ -81,6 +87,10 @@ def get_book(key, user_data=None):
     if book.user.key() != user_data.key():
         return False
     return book
+
+def get_chapters(book):
+    return False
+
 
 def gen_paging(page, pages, url):
     
@@ -244,6 +254,30 @@ class BookSaveHandler(webapp.RequestHandler):
         
         self.redirect("/books")
 
+
+
+
+class ChapterListHandler(webapp.RequestHandler):
+    def get(self):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key)
+        if not book:
+            return error404(self)
+        
+        chapters = get_chapters(book)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["chapters"] = chapters
+        path = os.path.join(os.path.dirname(__file__), 'views/chapters.html')
+        self.response.out.write(template.render(path, template_values))
+        
+
+
 class LoggedHandler(webapp.RequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -292,7 +326,8 @@ def main():
                                           ('/book-add', BookAddHandler),
                                           ('/book-edit', BookEditHandler),
                                           ('/book-save', BookSaveHandler),
-                                          ('/book-remove', BookRemoveHandler)],
+                                          ('/book-remove', BookRemoveHandler),
+                                          ('/chapters', ChapterListHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 

@@ -1,0 +1,22 @@
+{% extends "main.html" %}
+
+
+{% block title %}Chapters for {{book.title|escape}}{% endblock %}
+
+{% block body %}
+
+<h1>Chapters for {{book.title|escape}}</h1>
+
+{% if chapters %}
+
+<table>
+</table>
+
+<p><a href="/chapter-add?book={{book.key}}">Add another</a></p>
+
+{% else %}
+<p>No chapters yet!</p>
+<p><a href="/chapter-add?book={{book.key}}">Add one!</a></p>
+{% endif %}
+
+{% endblock %}
