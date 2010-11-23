@@ -9,8 +9,25 @@
 
 {% if books %}
 
+<table>
+{% for book in books %}
+    <tr>
+        <td>{{book.title}}</td>
+        <td><a href="/book-edit?key={{book.key}}">Edit</a></td>
+    </tr>
+
+{% endfor %}
+</table>
+
+<p><a href="/book-add">Add another</a></p>
+
 {% else %}
 <p>No books!</p>
+<p><a href="/book-add">Add one!</a></p>
+{% endif %}
+
+{% if paging %}
+    <div>{{paging}}</div>
 {% endif %}
 
 {% endblock %}

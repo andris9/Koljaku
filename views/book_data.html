@@ -1,0 +1,30 @@
+{% extends "main.html" %}
+
+
+{% block title %}{{page_title}}{% endblock %}
+
+{% block body %}
+
+<h1>{{page_title}}</h1>
+
+
+<form method="post" action="/book-save">
+
+<input type="hidden" name="key" value="{{key|escape}}"/>
+
+<table>
+    <tr>
+        <td>Title</td>
+        <td><input type="text" name="title" value="{{title|escape}}" /></td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td><input type="submit" name="save" value="Save book" /></td>
+    </tr>
+</table>
+
+</form>
+
+<p><a href="/book-remove?key={{key|escape}}">Delete this book</a></p>
+
+{% endblock %}
