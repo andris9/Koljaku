@@ -32,10 +32,14 @@ class Book(db.Model):
   updated = db.DateTimeProperty(auto_now = True)
   title = db.StringProperty()
   chapters = db.TextProperty()
+  index_page = db.BooleanProperty(default = True)
+  toc_page = db.BooleanProperty(default = True)
+  copyright_page = db.BooleanProperty(default = True)
 
 class Chapter(db.Model):
   book = db.ReferenceProperty(reference_class = Book, default = None)
   title = db.StringProperty()
+  type = db.StringProperty(default="chapter")
 
 
 def get_user(user = None):
@@ -174,6 +178,9 @@ class BookAddHandler(webapp.RequestHandler):
         template_values["user_data"] = user_data
         template_values["key"] = self.request.get("title", u"")
         template_values["title"] = self.request.get("title", u"")
+        template_values["index_page"] = self.request.get("index_page", False)
+        template_values["toc_page"] = self.request.get("toc_page", False)
+        template_values["copyright_page"] = self.request.get("copyright_page", False)
         template_values["page_title"] = "Add book"
         path = os.path.join(os.path.dirname(__file__), 'views/book_data.html')
         self.response.out.write(template.render(path, template_values))
@@ -194,6 +201,9 @@ class BookEditHandler(webapp.RequestHandler):
         template_values["user_data"] = user_data
         template_values["key"] = book.key()
         template_values["title"] = self.request.get("title", book.title)
+        template_values["index_page"] = self.request.get("index_page", book.index_page)
+        template_values["toc_page"] = self.request.get("toc_page", book.toc_page)
+        template_values["copyright_page"] = self.request.get("copyright_page", book.copyright_page)
         template_values["page_title"] = "Edit book"
         path = os.path.join(os.path.dirname(__file__), 'views/book_data.html')
         self.response.out.write(template.render(path, template_values))
@@ -229,10 +239,19 @@ class BookSaveHandler(webapp.RequestHandler):
         key = self.request.get("key", False)
         title = self.request.get("title","Untitled book")
 
+        index_page = bool(self.request.get("index_page"))
+        toc_page = bool(self.request.get("toc_page"))
+        copyright_page = bool(self.request.get("copyright_page"))
+
         def add_book():
             book = Book(parent=user_data)
             book.user = user_data
             book.title = title
+            
+            book.index_page =  index_page
+            book.toc_page = toc_page
+            book.copyright_page = copyright_page
+            
             user_data.books += 1
             book.put()
             user_data.put()
@@ -244,6 +263,9 @@ class BookSaveHandler(webapp.RequestHandler):
             if not book:
                 return error404(self)
             book.title = title
+            book.index_page =  index_page
+            book.toc_page = toc_page
+            book.copyright_page = copyright_page
             book.put()
             memcache.set("<book-%s>" % key, book)
             

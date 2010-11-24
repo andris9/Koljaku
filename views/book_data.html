@@ -18,13 +18,26 @@
         <td><input type="text" name="title" value="{{title|escape}}" /></td>
     </tr>
     <tr>
+        <td colspan="2"><label></label><input type="checkbox" name="index_page" {% if index_page %}checked="true"{% endif %} /> use index page</label></td>
+    </tr>
+    <tr>
+        <td colspan="2"><label></label><input type="checkbox" name="toc_page" {% if toc_page %}checked="true"{% endif %} /> use table of contents</label></td>
+    </tr>
+    <tr>
+        <td colspan="2"><label></label><input type="checkbox" name="copyright_page" {% if copyright_page %}checked="true"{% endif %} /> use copyright page</label></td>
+    </tr>
+    <tr>
         <td>&nbsp;</td>
-        <td><input type="submit" name="save" value="Save book" /></td>
+        <td><input type="submit" name="save" value="Save book details" /></td>
     </tr>
 </table>
 
 </form>
 
-<p><a href="/book-remove?key={{key|escape}}">Delete this book</a></p>
+{% if key %}
+<p><a href="/book-remove?key={{key|escape}}" onclick="return confirm('Are you sure')">Delete this book</a></p>
+{% endif %}
+
+<p><a href="/books">Back to book list</a></p>
 
 {% endblock %}
