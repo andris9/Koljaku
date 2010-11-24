@@ -1,11 +1,25 @@
 {% extends "main.html" %}
 
 
-{% block title %}Chapters for {{book.title|escape}}{% endblock %}
+{% block title %}Contents for {{book.title|escape}}{% endblock %}
 
 {% block body %}
 
-<h1>Chapters for {{book.title|escape}}</h1>
+<h1>Contents for {{book.title|escape}}</h1>
+
+{% if book.use_index %}
+<p><a href="/chapter-index?book={{book.key}}">Index page</a></p>
+{% endif %}
+
+{% if book.use_toc %}
+<p><a href="/chapter-toc?book={{book.key}}">Table of contents</a></p>
+{% endif %}
+
+{% if book.use_copyright %}
+<p><a href="/chapter-copyright?book={{book.key}}">Copyright info</a></p>
+{% endif %}
+
+<h2>Chapters</h2>
 
 {% if chapters %}
 

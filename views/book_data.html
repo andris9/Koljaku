@@ -18,13 +18,13 @@
         <td><input type="text" name="title" value="{{title|escape}}" /></td>
     </tr>
     <tr>
-        <td colspan="2"><label></label><input type="checkbox" name="index_page" {% if index_page %}checked="true"{% endif %} /> use index page</label></td>
+        <td colspan="2"><label><input type="checkbox" name="use_index" {% if use_index %}checked="true"{% endif %} /> use index page</label></td>
     </tr>
     <tr>
-        <td colspan="2"><label></label><input type="checkbox" name="toc_page" {% if toc_page %}checked="true"{% endif %} /> use table of contents</label></td>
+        <td colspan="2"><label><input type="checkbox" name="use_toc" {% if use_toc %}checked="true"{% endif %} /> use table of contents</label></td>
     </tr>
     <tr>
-        <td colspan="2"><label></label><input type="checkbox" name="copyright_page" {% if copyright_page %}checked="true"{% endif %} /> use copyright page</label></td>
+        <td colspan="2"><label><input type="checkbox" name="use_copyright" {% if use_copyright %}checked="true"{% endif %} /> use copyright page</label></td>
     </tr>
     <tr>
         <td>&nbsp;</td>

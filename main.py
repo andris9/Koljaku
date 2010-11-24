@@ -31,16 +31,16 @@ class Book(db.Model):
   added = db.DateTimeProperty(auto_now_add = True)
   updated = db.DateTimeProperty(auto_now = True)
   title = db.StringProperty()
-  chapters = db.TextProperty()
-  index_page = db.BooleanProperty(default = True)
-  toc_page = db.BooleanProperty(default = True)
-  copyright_page = db.BooleanProperty(default = True)
+  use_index = db.BooleanProperty(default = True)
+  use_toc = db.BooleanProperty(default = True)
+  use_copyright = db.BooleanProperty(default = True)
+  page_index = db.TextProperty()
+  page_toc = db.TextProperty()
+  page_copyright = db.TextProperty()
 
 class Chapter(db.Model):
   book = db.ReferenceProperty(reference_class = Book, default = None)
   title = db.StringProperty()
-  type = db.StringProperty(default="chapter")
-
 
 def get_user(user = None):
     if not user:
@@ -178,9 +178,9 @@ class BookAddHandler(webapp.RequestHandler):
         template_values["user_data"] = user_data
         template_values["key"] = self.request.get("title", u"")
         template_values["title"] = self.request.get("title", u"")
-        template_values["index_page"] = self.request.get("index_page", False)
-        template_values["toc_page"] = self.request.get("toc_page", False)
-        template_values["copyright_page"] = self.request.get("copyright_page", False)
+        template_values["use_index"] = self.request.get("use_index", False)
+        template_values["use_toc"] = self.request.get("use_toc", False)
+        template_values["use_copyright"] = self.request.get("use_copyright", False)
         template_values["page_title"] = "Add book"
         path = os.path.join(os.path.dirname(__file__), 'views/book_data.html')
         self.response.out.write(template.render(path, template_values))
@@ -201,9 +201,9 @@ class BookEditHandler(webapp.RequestHandler):
         template_values["user_data"] = user_data
         template_values["key"] = book.key()
         template_values["title"] = self.request.get("title", book.title)
-        template_values["index_page"] = self.request.get("index_page", book.index_page)
-        template_values["toc_page"] = self.request.get("toc_page", book.toc_page)
-        template_values["copyright_page"] = self.request.get("copyright_page", book.copyright_page)
+        template_values["use_index"] = self.request.get("use_index", book.use_index)
+        template_values["use_toc"] = self.request.get("use_toc", book.use_toc)
+        template_values["use_copyright"] = self.request.get("use_copyright", book.use_copyright)
         template_values["page_title"] = "Edit book"
         path = os.path.join(os.path.dirname(__file__), 'views/book_data.html')
         self.response.out.write(template.render(path, template_values))
@@ -239,22 +239,23 @@ class BookSaveHandler(webapp.RequestHandler):
         key = self.request.get("key", False)
         title = self.request.get("title","Untitled book")
 
-        index_page = bool(self.request.get("index_page"))
-        toc_page = bool(self.request.get("toc_page"))
-        copyright_page = bool(self.request.get("copyright_page"))
+        use_index = bool(self.request.get("use_index"))
+        use_toc = bool(self.request.get("use_toc"))
+        use_copyright = bool(self.request.get("use_copyright"))
 
         def add_book():
             book = Book(parent=user_data)
             book.user = user_data
             book.title = title
             
-            book.index_page =  index_page
-            book.toc_page = toc_page
-            book.copyright_page = copyright_page
+            book.use_index =  use_index
+            book.use_toc = use_toc
+            book.use_copyright = use_copyright
             
             user_data.books += 1
             book.put()
             user_data.put()
+            
             memcache.set("<user-%s>" % (user_data.user.federated_identity() or user_data.user.user_id()), user_data)
             memcache.set("<book-%s>" % book.key(), book)
             
@@ -263,9 +264,9 @@ class BookSaveHandler(webapp.RequestHandler):
             if not book:
                 return error404(self)
             book.title = title
-            book.index_page =  index_page
-            book.toc_page = toc_page
-            book.copyright_page = copyright_page
+            book.use_index =  use_index
+            book.use_toc = use_toc
+            book.use_copyright = use_copyright
             book.put()
             memcache.set("<book-%s>" % key, book)
             
