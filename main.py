@@ -20,6 +20,7 @@ import re
 from google.appengine.api import memcache
 import logging
 import math
+import string
 
 ON_PAGE = 20
 
@@ -98,8 +99,32 @@ def get_book(key, user_data=None):
         return False
     return book
 
+def get_chapter(key, user_data=None):
+    if user_data is None:
+        user_data = get_user()
+    if not key:
+        return False
+    chapter = memcache.get("<chapter-%s>" % key)
+    if chapter is None:
+        try:
+            chapter = Chapter.get(key)
+        except:
+            return False
+        
+        memcache.set("<chapter-%s>" % key, chapter)
+    if not chapter:
+        return False
+    if chapter.book.user.key() != user_data.key():
+        return False
+    return chapter
+
 def get_chapters(book):
-    return False
+    if book.chapters:
+        chapters = json.loads(book.chapters)
+        return Chapter.get(chapters)
+    else:
+        return False
+    
 
 def get_index_page(book):
     
@@ -163,9 +188,17 @@ def gen_template_values(http):
 
 def parse_html(html):
     # siin peaks olema ka muu loogika, lehevahetused jne
-    html = html2markdown.html2text(html)
-    html = markdown2.markdown(html)
-    return html
+    md = html2markdown.html2text(html)
+    title = get_title(md)
+    return [markdown2.markdown(md), title]
+
+def get_title(html):
+    m = re.search('^\s*##([^\n]*)\n', html, flags = re.MULTILINE)
+    logging.error(m)
+    if m:
+        return m.group(1) or ""
+    else:
+        return 
 
 def showError(http, message=None):
     template_values = gen_template_values(http)
@@ -341,6 +374,50 @@ class BookSaveHandler(webapp.RequestHandler):
         self.redirect("/books")
 
 
+class BookPreviewHandler(webapp.RequestHandler):
+    def get(self):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key)
+        if not book:
+            return error404(self)
+        
+        chapters = get_chapters(book)
+        
+        index = copyright = toc = False
+
+        if book.use_index:
+            index = get_index_page(book)
+        
+        if book.use_copyright:
+            copyright = get_copyright_page(book)
+        
+        if book.use_toc:
+            toc = get_toc_page(book)
+            
+            toc_template = ""
+            i = 0
+            for chapter in chapters:
+                i += 1
+                toc_template +="  1. [Chapter %s.%s](#ch-%s)" % (i, chapter.title and u" %s" % chapter.title or u"", chapter.key().id())
+            
+            toc = string.replace(toc, "%TOC%", markdown2.markdown(toc_template))
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["chapters"] = chapters
+        
+        template_values["index"] = index
+        template_values["copyright"] = copyright
+        template_values["toc"] = toc
+        
+        path = os.path.join(os.path.dirname(__file__), 'views/preview.html')
+        self.response.out.write(template.render(path, template_values))
+        
+
 class ChapterListHandler(webapp.RequestHandler):
     def get(self):
         user_data = get_user()
@@ -424,7 +501,7 @@ class ChapterCopyrightHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'views/editor.html')
         self.response.out.write(template.render(path, template_values))
 
-class ChapterSaveSpecialHandler(webapp.RequestHandler):
+class ChapterSaveHandler(webapp.RequestHandler):
     def post(self):
         user_data = get_user()
         if not user_data:
@@ -436,21 +513,101 @@ class ChapterSaveSpecialHandler(webapp.RequestHandler):
             return error404(self)
 
         type = self.request.get("type", False)
+        key = self.request.get("key", False)
         
-        contents = parse_html(self.request.get("contents",u""))
+        contents_md = self.request.get("contents",u"")
+        data = parse_html(contents_md)
+        contents = data[0]
+        title = data[1]
+        
+        def save_special(book):
+            book.put()
+            memcache.set("<book-%s>" % book.key(), book)
+        
+        def save_normal(book, chapter):
+            rearrange = False
+            if not chapter:
+                chapter = Chapter(parent=book)
+                chapter.book = book
+                rearrange = True
+            
+            chapter.title = title
+            chapter.body = contents
+            chapter.put()
+            
+            if rearrange:
+                chapter_queue = book.chapters and json.loads(book.chapters) or []
+                chapter_queue.append(str(chapter.key()))
+                book.chapters = json.dumps(chapter_queue)
+                book.put()
+                memcache.set("<book-%s>" % book.key(), book)
+            memcache.set("<chapter-%s>" % chapter.key(), chapter)
+            
         
         if type=="index":
             book.page_index = contents
+            save_special(book)
         elif type=="toc":
             book.page_toc = contents
+            save_special(book)
         elif type=="copyright":
             book.page_copyright = contents
+            save_special(book)
+        elif type=="normal":
+            chapter = get_chapter(key)
+            db.run_in_transaction(save_normal, book, chapter)
         else:
             return error404(self)
 
-        book.put()
-        memcache.set("<book-%s>" % book.key(), book)
+        
         self.redirect("/chapters?key=%s" % book.key())
+
+class ChapterHandler(webapp.RequestHandler):
+    def get(self):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        
+        chapter = get_chapter(key)
+        if not chapter:
+            return error404(self)
+        book = get_book(chapter.book.key())
+        if not book:
+            return error404(self)
+
+        title = self.request.get("title", chapter.title)
+        contents = self.request.get("contents", chapter.body)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["contents"] = contents
+        template_values["title"] = title
+        template_values["type"] = "normal"
+        template_values["key"] = chapter.key()
+        path = os.path.join(os.path.dirname(__file__), 'views/editor.html')
+        self.response.out.write(template.render(path, template_values))
+
+class ChapterAddHandler(webapp.RequestHandler):
+    def get(self):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("book", False)
+        book = get_book(key)
+        if not book:
+            return error404(self)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["contents"] = parse_html(self.request.get("contents",u"<h2>Chapter title</h2><p>First paragraph</p>"))[0]
+        template_values["title"] = u"New chapter"
+        template_values["type"] = "normal"
+        template_values["key"] = ""
+        path = os.path.join(os.path.dirname(__file__), 'views/editor.html')
+        self.response.out.write(template.render(path, template_values))
 
 class LoggedHandler(webapp.RequestHandler):
     def get(self):
@@ -491,6 +648,7 @@ class LoginHandler(webapp.RequestHandler):
                     federated_identity=self.request.get("openid", None))
         self.redirect(url)
 
+
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
                                           ('/login', LoginHandler),
@@ -501,11 +659,14 @@ def main():
                                           ('/book-edit', BookEditHandler),
                                           ('/book-save', BookSaveHandler),
                                           ('/book-remove', BookRemoveHandler),
+                                          ('/book-preview', BookPreviewHandler),
                                           ('/chapters', ChapterListHandler),
                                           ('/chapter-index', ChapterIndexHandler),
                                           ('/chapter-toc', ChapterTOCHandler),
                                           ('/chapter-copyright', ChapterCopyrightHandler),
-                                          ('/chapter-save-special', ChapterSaveSpecialHandler)],
+                                          ('/chapter-save', ChapterSaveHandler),
+                                          ('/chapter-add', ChapterAddHandler),
+                                          ('/chapter', ChapterHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 

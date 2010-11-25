@@ -1,0 +1,42 @@
+{% extends "main.html" %}
+
+
+{% block title %}jipikajee{% endblock %}
+
+{% block body %}
+
+<h1>Preview</h1>
+
+
+<p><a href="/chapters?key={{book.key}}">Back to contents</a></p>
+
+<div class="preview">
+
+{% if book.use_index %}
+<div id="ch-index">
+{{index}}
+</div>
+{% endif %}
+
+{% if book.use_copyright %}
+<div id="ch-copyright">
+{{copyright}}
+</div>
+{% endif %}
+
+{% if book.use_toc %}
+<div id="ch-toc">
+{{toc}}
+</div>
+{% endif %}
+
+{% for chapter in chapters %}
+<div id="ch-{{chapter.key.id}}">
+{{chapter.body}}
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

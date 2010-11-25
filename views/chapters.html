@@ -7,24 +7,36 @@
 
 <h1>Contents for {{book.title|escape}}</h1>
 
+<p><a href="/books">Back to books</a></p>
+
+<p><a href="/book-preview?key={{book.key}}">Preview this book</a></p>
+
+<h2>Special</h2>
+
+<ul>
 {% if book.use_index %}
-<p><a href="/chapter-index?book={{book.key}}">Index page</a></p>
+<li><a href="/chapter-index?book={{book.key}}">Index page</a></li>
 {% endif %}
 
 {% if book.use_toc %}
-<p><a href="/chapter-toc?book={{book.key}}">Table of contents</a></p>
+<li><a href="/chapter-toc?book={{book.key}}">Table of contents</a></li>
 {% endif %}
 
 {% if book.use_copyright %}
-<p><a href="/chapter-copyright?book={{book.key}}">Copyright info</a></p>
+<li><a href="/chapter-copyright?book={{book.key}}">Copyright info</a></li>
 {% endif %}
+
+</ul>
 
 <h2>Chapters</h2>
 
 {% if chapters %}
 
-<table>
-</table>
+<ul>
+    {% for chapter in chapters %}
+    <li><a href="/chapter?key={{chapter.key}}">Chapter {{forloop.counter}}.{% if chapter.title %} {{chapter.title}}{%endif%}</a></li>
+    {% endfor %}
+</ul>
 
 <p><a href="/chapter-add?book={{book.key}}">Add another</a></p>
 

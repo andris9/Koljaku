@@ -7,14 +7,17 @@
 
 <h1>{{title|escape}}</h1>
 
-{% if user %}
-<p><a href="/books">Your books</a></p>
-{% endif %}
 
-<form method="post" action="/chapter-save-special">
+<p><a href="/chapters?key={{book.key}}">Back to contents</a></p>
+
+
+<form method="post" action="/chapter-save">
 
 <input type="hidden" name="book" value="{{book.key}}" />
 <input type="hidden" name="type" value="{{type}}" />
+{% if key %}
+<input type="hidden" name="key" value="{{key}}" />
+{% endif %}
 
 <div><textarea name="contents" style="width: 550px; height: 350px;">{{ contents|escape }}</textarea></div>
 <p><input type="submit" name="save" value="Save contents"/></p>

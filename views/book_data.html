@@ -42,10 +42,11 @@
 
 </form>
 
+<p><a href="/books">Back to book list</a></p>
+
 {% if key %}
 <p><a href="/book-remove?key={{key|escape}}" onclick="return confirm('Are you sure')">Delete this book</a></p>
 {% endif %}
 
-<p><a href="/books">Back to book list</a></p>
 
 {% endblock %}

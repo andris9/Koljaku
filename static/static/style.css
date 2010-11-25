@@ -3,3 +3,41 @@
 body{
     font-family: Helvetica, Arial, Sans-serif;
 }
+
+.preview{
+    font-family: Georgia, Sans-serif;
+    font-size: 13px;
+    width: 500px;
+}
+
+.preview p{
+    text-align: justify;
+}
+
+.preview h1, .preview h2, .preview h3, .preview h4, .preview h5, .preview h6{
+    font-weight: normal;
+}
+
+.preview h6{
+    font-size: 14px;
+}
+
+.preview h5{
+    font-size: 15px;
+}
+
+.preview h4{
+    font-size: 16px;
+}
+
+.preview h3{
+    font-size: 17px;
+}
+
+.preview h2{
+    font-size: 19px;
+}
+
+.preview h1{
+    font-size: 21px;
+}
