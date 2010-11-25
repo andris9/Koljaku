@@ -41,10 +41,12 @@ class Book(db.Model):
   page_index = db.TextProperty()
   page_toc = db.TextProperty()
   page_copyright = db.TextProperty()
+  chapters = db.TextProperty()
 
 class Chapter(db.Model):
   book = db.ReferenceProperty(reference_class = Book, default = None)
   title = db.StringProperty()
+  body = db.TextProperty()
 
 def get_user(user = None):
     if not user:
@@ -105,8 +107,7 @@ def get_index_page(book):
         return book.page_index
 
     template_values = {
-        "book": book,
-        "year": 2010
+        "book": book
     }
     file = open('templates/index.html')
     tmpl = file.read().decode("utf-8")
@@ -132,7 +133,8 @@ def get_copyright_page(book):
         return book.page_copyright
 
     template_values = {
-        "book": book
+        "book": book,
+        "year": 2010
     }
     file = open('templates/copyright.html')
     tmpl = file.read().decode("utf-8")
@@ -158,6 +160,12 @@ def gen_template_values(http):
         "user": users.get_current_user()
     }
     return template_values
+
+def parse_html(html):
+    # siin peaks olema ka muu loogika, lehevahetused jne
+    html = html2markdown.html2text(html)
+    html = markdown2.markdown(html)
+    return html
 
 def showError(http, message=None):
     template_values = gen_template_values(http)
@@ -429,12 +437,14 @@ class ChapterSaveSpecialHandler(webapp.RequestHandler):
 
         type = self.request.get("type", False)
         
+        contents = parse_html(self.request.get("contents",u""))
+        
         if type=="index":
-            book.page_index = self.request.get("contents",u"")
+            book.page_index = contents
         elif type=="toc":
-            book.page_toc = self.request.get("contents",u"")
+            book.page_toc = contents
         elif type=="copyright":
-            book.page_copyright = self.request.get("contents",u"")
+            book.page_copyright = contents
         else:
             return error404(self)
 

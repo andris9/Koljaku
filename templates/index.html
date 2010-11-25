@@ -1,0 +1,8 @@
+{% if book.title %}
+<h1>{{book.title}}</h1>
+{%else%}
+<h1>Untitled book</h1>
+{%endif%}
+{% if book.author %}
+<p>By {{book.author}}</p>
+{% endif %}
