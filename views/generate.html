@@ -1,0 +1,18 @@
+<html>
+<body>
+<p><a href="/generate-guide/Guide.opf?key={{book.key}}">Guide.opf</a></p>
+<p><a href="/generate-ncx/KREATA{{book.key.id}}.ncx?key={{book.key}}">KREATA{{book.key.id}}.ncx</a></p>
+{% if book.use_index %}
+<p><a href="/generate-item/index.html?type=index&book={{book.key}}">index.html</a></p>
+{% endif %}
+{% if book.use_toc %}
+<p><a href="/generate-item/toc.html?type=toc&book={{book.key}}">toc.html</a></p>
+{% endif %}
+{% if book.use_copyright %}
+<p><a href="/generate-item/copyright.html?type=copyright&book={{book.key}}">copyright.html</a></p>
+{% endif %}
+{% for chapter in chapters %}
+<p><a href="/generate-item/chapter_{{chapter.key.id}}.html?type=chapter&key={{chapter.key}}">chapter_{{chapter.key.id}}.html</a></p>
+{% endfor %}
+</body>
+</html>

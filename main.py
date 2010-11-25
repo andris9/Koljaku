@@ -80,7 +80,7 @@ def get_books(user = None, page = 0):
     results = query.fetch(ON_PAGE, page*ON_PAGE)
     return results
 
-def get_book(key, user_data=None):
+def get_book(key, user_data=None, public=False):
     if user_data is None:
         user_data = get_user()
     if not key:
@@ -95,11 +95,11 @@ def get_book(key, user_data=None):
         memcache.set("<book-%s>" % key, book)
     if not book:
         return False
-    if book.user.key() != user_data.key():
+    if not public and book.user.key() != user_data.key():
         return False
     return book
 
-def get_chapter(key, user_data=None):
+def get_chapter(key, user_data=None, public = False):
     if user_data is None:
         user_data = get_user()
     if not key:
@@ -114,7 +114,7 @@ def get_chapter(key, user_data=None):
         memcache.set("<chapter-%s>" % key, chapter)
     if not chapter:
         return False
-    if chapter.book.user.key() != user_data.key():
+    if not public and chapter.book.user.key() != user_data.key():
         return False
     return chapter
 
@@ -185,6 +185,21 @@ def gen_template_values(http):
         "user": users.get_current_user()
     }
     return template_values
+
+def gen_toc(book, chapters=None):
+    toc = get_toc_page(book)
+    
+    if not chapters:
+        chapters = get_chapters(book)
+    
+    toc_template = ""
+    i = 0
+    for chapter in chapters:
+        i += 1
+        toc_template +="  1. [%s](chapter_%s.html)\n" % (chapter.title and u" %s" % chapter.title or (u"Chapter %s" % i), chapter.key().id())
+            
+    return string.replace(toc, "%TOC%", markdown2.markdown(toc_template))
+
 
 def parse_html(html):
     # siin peaks olema ka muu loogika, lehevahetused jne
@@ -397,15 +412,7 @@ class BookPreviewHandler(webapp.RequestHandler):
             copyright = get_copyright_page(book)
         
         if book.use_toc:
-            toc = get_toc_page(book)
-            
-            toc_template = ""
-            i = 0
-            for chapter in chapters:
-                i += 1
-                toc_template +="  1. [%s](#ch-%s)\n" % (chapter.title and u" %s" % chapter.title or (u"Chapter %s" % i), chapter.key().id())
-            
-            toc = string.replace(toc, "%TOC%", markdown2.markdown(toc_template))
+            toc = gen_toc(book, chapters)
         
         template_values = gen_template_values(self)
         template_values["book"] = book
@@ -612,6 +619,161 @@ class ChapterAddHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'views/editor.html')
         self.response.out.write(template.render(path, template_values))
 
+
+class GenerateHandler(webapp.RequestHandler):
+    def get(self):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key)
+        if not book:
+            return error404(self)
+        
+        chapters = get_chapters(book)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["chapters"] = chapters
+        path = os.path.join(os.path.dirname(__file__), 'views/generate.html')
+        self.response.out.write(template.render(path, template_values))
+
+class GenerateItemHandler(webapp.RequestHandler):
+    def get(self, name=u""):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book_key = self.request.get("book", False)
+        type = self.request.get("type", "chapter")
+        
+        title = u""
+        body = u""
+        
+        if type=="chapter":
+            chapter = get_chapter(key, public=True)
+            if chapter:
+                book = chapter.book
+                title = chapter.title
+                body = chapter.body
+        else:
+            book = get_book(book_key)
+        
+        if not book:
+            return error404(self)
+        
+        if type=="index":
+            title = book.title
+            body = get_index_page(book)
+        elif type=="toc":
+            title = "Table of contents"
+            body = gen_toc(book)
+        elif type=="copyright":
+            title = book.title
+            body = get_copyright_page(book)
+        
+        chapters = get_chapters(book)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["title"] = title
+        template_values["body"] = body
+        
+        self.response.headers['Content-Disposition'] = """attachment; filename="%s""""" % name
+        path = os.path.join(os.path.dirname(__file__), 'views/generate-item.html')
+        self.response.out.write(template.render(path, template_values))
+
+class GenerateGuideHandler(webapp.RequestHandler):
+    def get(self, name=u""):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key, public=True)
+        if not book:
+            return error404(self)
+        
+        chapters = get_chapters(book)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["chapters"] = chapters
+        
+        self.response.headers['Content-Type'] = "application/oebps-package+xml; charset=utf-8"
+        self.response.headers['Content-Disposition'] = """attachment; filename="Guide.opf"""""
+        
+        path = os.path.join(os.path.dirname(__file__), 'views/guide.opf')
+        self.response.out.write(template.render(path, template_values))
+
+class GenerateNCXHandler(webapp.RequestHandler):
+    def get(self, name=u""):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key, public=True)
+        if not book:
+            return error404(self)
+        
+        chapters = get_chapters(book)
+        
+        i = 0
+        
+        parts = []
+        
+        if book.use_toc:
+            i += 1
+            parts.append({
+                "class": "toc",
+                "id": "toc",
+                "order": i,
+                "title": "Table of contents",
+                "filename": "toc.html"
+            })
+        if book.use_index:
+            i += 1
+            parts.append({
+                "class": "welcome",
+                "id": "index",
+                "order": i,
+                "title": book.title,
+                "filename": "index.html"
+            })
+        if book.use_copyright:
+            i += 1
+            parts.append({
+                "class": "copyright",
+                "id": "copyright",
+                "order": i,
+                "title": "Copyright information",
+                "filename": "copyright.html"
+            })
+        
+        for chapter in chapters:
+            i += 1
+            parts.append({
+                "class": "chapter",
+                "id": "chapter_%s" % chapter.key().id(),
+                "order": i,
+                "title": chapter.title,
+                "filename": "chapter_%s.html" % chapter.key().id()
+            })
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["chapters"] = chapters
+        template_values["parts"] = parts
+        
+        self.response.headers['Content-Type'] = "application/x-dtbncx+xml; charset=utf-8"
+        self.response.headers['Content-Disposition'] = """attachment; filename="KREATA%s.ncx""""" % book.key().id()
+        path = os.path.join(os.path.dirname(__file__), 'views/TOC.ncx')
+        self.response.out.write(template.render(path, template_values))
+
+
 class LoggedHandler(webapp.RequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -669,7 +831,11 @@ def main():
                                           ('/chapter-copyright', ChapterCopyrightHandler),
                                           ('/chapter-save', ChapterSaveHandler),
                                           ('/chapter-add', ChapterAddHandler),
-                                          ('/chapter', ChapterHandler)],
+                                          ('/chapter', ChapterHandler),
+                                          ('/generate', GenerateHandler),
+                                          (r'/generate-guide/(.*)', GenerateGuideHandler),
+                                          (r'/generate-ncx/(.*)', GenerateNCXHandler),
+                                          (r'/generate-item/(.*)', GenerateItemHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 

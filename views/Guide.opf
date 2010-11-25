@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The unique identifier in <package unique-identifier=”XYZ”> is a reference to
+  the identifier specified in <metadata> as <dc:Identifier id=”XYZ”>.
+-->
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="Kreata{{book.key.id}}">
+
+<!--
+    Metadata:
+    The required metadata element is used to provide information about the publication
+    as a whole.
+    
+    For detailed info visit: http://www.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.2
+-->
+    
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+  
+  <!-- Title [mandatory]: The title of the publication. This is the title that will appear on the "Home" screen. -->
+  
+    <dc:title>{{book.title|escape}}</dc:title>
+  
+  <!-- Language [mandatory]: the language of the publication. The language codes used are the same as in XML
+  and HTML. The full list can be found here: http://www.w3.org/International/articles/language-tags/
+  Some common language strings are:
+  "en"    English
+  "en-us" English - USA
+  "en-gb" English - United Kingdom
+  "fr"    French
+  "fr-ca" French - Canada
+  "de"    German
+  "es"    Spanish
+  -->
+    <dc:language>en-us</dc:language>
+
+  <!-- Cover [mandatory]. The cover image must be specified in <manifest> and referenced from
+  this <meta> element with a name="cover" attribute.
+  -->
+  <meta name="cover" content="My_Cover" />
+
+{% if book.isbn %}
+  <!-- The ISBN of your book goes here -->
+  
+    <dc:identifier id="Kreata{{book.key.id}}" opf:scheme="ISBN"></dc:identifier>
+{% endif %}
+  
+  <!-- The author of the book. For multiple authors, use multiple <dc:Creator> tags.
+       Additional contributors whose contributions are secondary to those listed in
+       creator  elements should be named in contributor elements.
+  -->
+{% if book.author %}
+    <dc:creator>{{book.author|escape}}</dc:creator>
+{% endif %}
+
+  <!-- Publisher: An entity responsible for making the resource available -->
+  
+    <dc:publisher>Kreata</dc:publisher>
+  
+  <!-- Subject: A topic of the content of the resource. Typically, Subject will be
+           expressed as keywords, key phrases or classification codes that describe a topic
+           of the resource. The BASICCode attribute should contain the subject code
+       according to the BISG specification:
+       http://www.bisg.org/what-we-do-20-73-bisac-subject-headings-2008-edition.php
+   -->
+    <dc:subject>Reference</dc:subject>
+
+{% if year %}
+  <!-- Date: Date of publication in YYYY-MM-DD format. (Days and month can be omitted).
+       Standard to follow: http://www.w3.org/TR/NOTE-datetime
+  -->
+    <dc:date>{{year}}</dc:date>
+{% endif %}
+
+
+{% if book.description %}
+  <!-- Description: A short description of the publication's content. -->
+  <dc:description>{{book.description|escape}}</dc:description>
+{% endif %}
+    
+</metadata>
+
+<!--
+    Manifest:
+    The required manifest must provide a list of all the files that are part of the
+    publication (e.g. Content Documents, NCX table of contents, image files, CSS style sheets).
+  Kindlegen however does not require CSS and images to be specified in the manifest if they
+  are referenced from the content HTML.
+    The manifest element must contain one or more item elements with the following media-type attributes:
+  
+  text/x-oeb1-document      HTML content files
+  application/x-dtbncx+xml  NCX table of contents
+  image/jpeg                JPEG image
+  image/GIF                 GIF image
+  
+    For detailed info visit: http://www.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.3
+-->
+
+<manifest>
+  <!-- HTML content files [mandatory] -->
+
+{% if book.use_index %}
+    <item id="item_index" media-type="application/xhtml+xml" href="index.html"></item>
+{% endif %}
+
+{% if book.use_toc %}
+    <item id="item_toc" media-type="application/xhtml+xml" href="toc.html"></item>
+{% endif %}
+
+{% if book.use_copyright %}
+    <item id="item_copyright" media-type="application/xhtml+xml" href="copyright.html"></item>
+{% endif %}
+
+{% for chapter in chapters %}
+    <item id="item_{{chapter.key.id}}" media-type="application/xhtml+xml" href="chapter_{{chapter.key.id}}.html"></item>
+{% endfor %}
+
+<!-- <item id="GraphicsC5_C5Screen-rating" media-type="image/gif" href="GraphicsC5/C5Screen-rating.gif"/> -->
+  
+  <!-- table of contents [mandatory] -->
+    <item id="My_Table_of_Contents" media-type="application/x-dtbncx+xml" href="KREATA{{book.key.id}}.ncx"/>
+  
+  <!-- cover image [mandatory] -->
+  <item id="My_Cover" media-type="image/gif" href="cover.png"/>
+</manifest>
+
+<!--
+    Spine:
+    Following manifest, there must be one and only one spine element, which contains one
+    or more itemref elements. Each itemref references an document designated
+    in the manifest. The order of the itemref elements organizes the associated content
+    files into the linear reading order of the publication.
+    
+    The toc attribute refers to the id ref of the NCX file specified in the manifest.
+    
+    For detailed info visit: 
+        http://www.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.4
+        http://www.niso.org/workrooms/daisy/Z39-86-2005.html#NCX
+-->
+    
+<spine toc="My_Table_of_Contents">
+  <!-- the spine defines the linear reading order of the book -->
+  
+{% if book.use_toc %}
+    <itemref idref="item_toc"/>
+{% endif %}
+
+
+{% if book.use_index %}
+    <itemref idref="item_index"/>
+{% endif %}
+
+{% if book.use_copyright %}
+    <itemref idref="item_copyright"/>
+{% endif %}
+
+{% for chapter in chapters %}
+    <itemref idref="item_{{chapter.key.id}}"/>
+{% endfor %}
+
+</spine>
+
+<!--
+    Guide:
+    Within the package there may be one guide element, containing one or more reference elements.
+    The guide element identifies fundamental structural components of the publication, to enable
+    Reading Systems to provide convenient access to them.
+  
+  For detailed info visit: http://www.idpf.org/2007/opf/OPF_2.0_final_spec.html#Section2.6
+  
+  The Kindle reading system support two special guide items which are both mandatory.
+  type="toc"  [mandatory]: a link to the HTML table of contents
+  type="text" [mandatory]: a link to where the content of the book starts (typically after the front matter)
+    
+  Kindle reading platforms need both thede guid items to provide a consistent user enxperience to the user.
+  
+  It is good practice to include both a logical table of contents (NCX) and an HTML table of contents
+  (made of hyperlinks). The NCX enables various advanced navigation features but the HTML table of
+  contents can easily be discovered by the user by paging through the book. Both are useful.
+    
+-->
+    
+<guide>
+{% if book.use_toc %}
+    <reference type="toc" title="Table of Contents" href="toc.html"></reference>
+{% endif %}
+{% if book.use_index %}
+    <reference type="text" title="Welcome" href="index.html"></reference>
+{% else %}
+
+    {% for chapter in chapters %}
+
+        {% if forloop.first %}
+            <reference type="text" title="{{chapter.title|escape}}" href="chapter_{{chapter.key.id}}.html"></reference>
+        {% endif %}
+
+    {% endfor %}
+
+{% endif %}
+</guide>
+
+</package>
