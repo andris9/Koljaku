@@ -215,17 +215,9 @@ def error404(http):
 class MainHandler(webapp.RequestHandler):
     def get(self):
         
-        f = open('gae.html', 'r')
-        html = f.read().decode("utf-8")
-        f.close()
-        
-        html = html2markdown.html2text(html)
-        html = markdown2.markdown(html)
-        
         #/<p class="preformatted_text" -> pre/
         
         template_values = gen_template_values(self)
-        template_values["html"] = html
         path = os.path.join(os.path.dirname(__file__), 'views/front.html')
         self.response.out.write(template.render(path, template_values))
 
@@ -309,9 +301,18 @@ class BookRemoveHandler(webapp.RequestHandler):
         if not book:
             return error404(self)
 
+        chapters = False
+        if book.chapters:
+            chapter_list = json.loads(book.chapters)
+            chapters = Chapter.get(chapter_list)
+            for chkey in chapter_list:
+                memcache.delete("<chapter-%s>" % chkey)
+                
         def remove_book():
             user_data.books -= 1
             book.delete()
+            if chapters:
+                db.delete(chapters)
             user_data.put()
             memcache.set("<user-%s>" % (user_data.user.federated_identity() or user_data.user.user_id()), user_data)
             memcache.delete("<book-%s>" % book.key())
@@ -402,7 +403,7 @@ class BookPreviewHandler(webapp.RequestHandler):
             i = 0
             for chapter in chapters:
                 i += 1
-                toc_template +="  1. [Chapter %s.%s](#ch-%s)" % (i, chapter.title and u" %s" % chapter.title or u"", chapter.key().id())
+                toc_template +="  1. [%s](#ch-%s)\n" % (chapter.title and u" %s" % chapter.title or (u"Chapter %s" % i), chapter.key().id())
             
             toc = string.replace(toc, "%TOC%", markdown2.markdown(toc_template))
         
@@ -414,7 +415,9 @@ class BookPreviewHandler(webapp.RequestHandler):
         template_values["copyright"] = copyright
         template_values["toc"] = toc
         
-        path = os.path.join(os.path.dirname(__file__), 'views/preview.html')
+        type = self.request.get("export", False) and "export" or "preview"
+        
+        path = os.path.join(os.path.dirname(__file__), 'views/%s.html' % type)
         self.response.out.write(template.render(path, template_values))
         
 
