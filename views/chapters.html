@@ -28,7 +28,7 @@
     {% ifequal book.conversion_status "OK" %}
 
         {% if book.conversion_key %}
-            <p><a href="/final-serve/export.mobi?key={{book.key}}"><strong>Download e-book</strong></a></p>
+            <p><a href="/final-serve/export.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated {{book.conversion_time}})</p>
         {% endif %}
     
     {% else %}
