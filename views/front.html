@@ -1,14 +1,17 @@
 {% extends "main.html" %}
 
 
-{% block title %}jipikajee{% endblock %}
+{% block title %}Welcome!{% endblock %}
 
 {% block body %}
 
-<h1>tere tere!</h1>
+<h2>Welcome!</h2>
+
+<p>This web service allows you to write a book online and download it in the Kindle format.</p>
+<p>Be warned - this is a work in progress project, just a working prototype.</p>
 
 {% if user %}
-<p><a href="/books">Your books</a></p>
+<p><a href="/books">Go to your books</a></p>
 {% endif %}
 
 {% endblock %}
