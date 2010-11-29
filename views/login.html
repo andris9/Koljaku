@@ -5,12 +5,13 @@
 
 {% block body %}
 
-<h1>Log in</h1>
+<h2>Log in</h2>
 
-<form method="post" action="/login">
+<form id="vorm" method="post" action="/login">
     <input type="hidden" name="target_url" value="{{ target_url }}"/>
     <p>
-        Open ID: <input type="text" name="openid" value="" /> <input type="submit" name="nupp" value="Log in" />
+        Log in with <a href="http://openid.net">OpenID</a> (default is google):<br/>
+        <input type="text" name="openid" id="openid" class="openid" value="" /> <input type="submit" name="nupp" value="Log in" />
     </p> 
 </form>
 

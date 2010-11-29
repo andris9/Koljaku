@@ -3,9 +3,18 @@
 
 {% block title %}{{page_title}}{% endblock %}
 
+{% block menu %}
+<li><a href="/books">Books</a></li>
+{% if key %}
+<li><a href="/book-preview?key={{book.key}}">Preview this book</a></li>
+<li><a href="/book-edit?key={{book.key}}">Edit book details</a></li>
+<li><a href="/chapters?key={{book.key}}">Back to book contents</a></li>
+{% endif %}
+{% endblock %}
+
 {% block body %}
 
-<h1>{{page_title}}</h1>
+<h2>{{page_title}}</h2>
 
 
 <form method="post" action="/book-save">
@@ -20,6 +29,10 @@
     <tr>
         <td>Author</td>
         <td><input type="text" name="author" value="{{author|escape}}" /></td>
+    </tr>
+    <tr>
+        <td>Description</td>
+        <td><input type="text" name="description" value="{{description|escape}}" /></td>
     </tr>
     <tr>
         <td>ISBN</td>
@@ -42,11 +55,22 @@
 
 </form>
 
-<p><a href="/books">Back to book list</a></p>
-
 {% if key %}
-<p><a href="/book-remove?key={{key|escape}}" onclick="return confirm('Are you sure')">Delete this book</a></p>
-{% endif %}
+<p class="floating-cover">
+   <img src="{% if book.cover_url %}{{book.cover_url}}{% else %}/static/images/sample-cover.jpg{% endif %}" alt="cover image for {{title|escape}}"/>
+</p>
+<div style="margin-left: 100px">
+<h3>Upload cover image</h3>
+<p><strong>NB!</strong> Cover image dimensions should be 600x800 pixels</p>
+<form action="{{cover_upload}}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="key" value="{{key|escape}}"/>
+    <p>Select file (PNG, JPEG, GIF): <input type="file" name="file"><br> <input type="submit" name="submit" value="Upload image"></p>
+</form>
+</div>
 
+<div style="clear: both;"></div>
+
+<p style="margin-top: 30px"><a href="/book-remove?key={{key|escape}}" onclick="return confirm('Are you sure')">Delete this book</a></p>
+{% endif %}
 
 {% endblock %}

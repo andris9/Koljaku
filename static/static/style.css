@@ -41,3 +41,82 @@ body{
 .preview h1{
     font-size: 21px;
 }
+
+#contents{
+    padding-top: 25px;
+}
+
+#menu {
+	background: #333;
+	float: left;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+}
+#menu li {
+	float: left;
+	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	margin: 0;
+	padding: 0;
+}
+#menu a {
+	background: #333 url("/static/images/seperator.gif") bottom right no-repeat;
+	color: #ccc;
+	display: block;
+	float: left;
+	margin: 0;
+	padding: 8px 12px;
+	text-decoration: none;
+}
+#menu a:hover {
+	background: #2580a2 url("/static/images/hover.gif") bottom center no-repeat;
+	color: #fff;
+	padding-bottom: 8px;
+}
+
+.openid{
+    padding-left: 19px;
+    border: 1px solid #CCC;
+    font-size: 12px;
+    background: url(/static/images/openid-icon.png) no-repeat 2px center;
+    width: 200px;
+}
+
+table.formatted{
+    border-left: 1px solid #CCC;
+    border-top: 1px solid #CCC;
+}
+
+table.formatted th{
+    background:  #333;
+    color: white;
+    text-align: left;
+    font-weight: bold;
+}
+
+table.formatted td, table.formatted th{
+    border-right: 1px solid #CCC;
+    border-bottom: 1px solid #CCC;
+    padding: 3px 5px;
+}
+
+.floating-cover{
+    float: left;
+    text-align: center;
+    padding: 5px;
+    margin:3px;
+    border: 1px solid #CCC;    
+}
+
+.floating-cover a{
+    text-decoration: none;
+    color: #888;
+
+    font-size: 12px;
+}
+
+.conversion{
+    background: #FAFAFA;
+    padding: 5px;
+}

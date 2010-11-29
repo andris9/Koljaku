@@ -30,12 +30,13 @@
 </div>
 {% endif %}
 
+{% if chapters %}
 {% for chapter in chapters %}
 <div id="ch-{{chapter.key.id}}">
 {{chapter.body}}
 </div>
-
 {% endfor %}
+{% endif %}
 
 </div>
 

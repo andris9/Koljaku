@@ -25,12 +25,13 @@
 <mbp:pagebreak/>
 {% endif %}
 
+{% if chapters %}
 {% for chapter in chapters %}
 <a name="ch-{{chapter.key.id}}"></a>
 {{chapter.body}}
 <mbp:pagebreak/>
-
 {% endfor %}
+{% endif %}
 
 </body>
 </html>

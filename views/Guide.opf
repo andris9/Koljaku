@@ -32,15 +32,17 @@
   -->
     <dc:language>en-us</dc:language>
 
+{% if book.cover_key %}
   <!-- Cover [mandatory]. The cover image must be specified in <manifest> and referenced from
   this <meta> element with a name="cover" attribute.
   -->
   <meta name="cover" content="My_Cover" />
+{% endif %}
 
 {% if book.isbn %}
   <!-- The ISBN of your book goes here -->
   
-    <dc:identifier id="Kreata{{book.key.id}}" opf:scheme="ISBN"></dc:identifier>
+    <dc:identifier id="Kreata{{book.key.id}}" opf:scheme="ISBN">{{book.isbn}}</dc:identifier>
 {% endif %}
   
   <!-- The author of the book. For multiple authors, use multiple <dc:Creator> tags.
@@ -98,28 +100,31 @@
   <!-- HTML content files [mandatory] -->
 
 {% if book.use_index %}
-    <item id="item_index" media-type="application/xhtml+xml" href="index.html"></item>
+    <item id="item_index" media-type="application/xhtml+xml" href="k{{book.key.id}}_index.html"></item>
 {% endif %}
 
 {% if book.use_toc %}
-    <item id="item_toc" media-type="application/xhtml+xml" href="toc.html"></item>
+    <item id="item_toc" media-type="application/xhtml+xml" href="k{{book.key.id}}_toc.html"></item>
 {% endif %}
 
 {% if book.use_copyright %}
-    <item id="item_copyright" media-type="application/xhtml+xml" href="copyright.html"></item>
+    <item id="item_copyright" media-type="application/xhtml+xml" href="k{{book.key.id}}_copyright.html"></item>
 {% endif %}
 
 {% for chapter in chapters %}
-    <item id="item_{{chapter.key.id}}" media-type="application/xhtml+xml" href="chapter_{{chapter.key.id}}.html"></item>
+    <item id="item_{{chapter.key.id}}" media-type="application/xhtml+xml" href="k{{book.key.id}}_chapter_{{chapter.key.id}}.html"></item>
 {% endfor %}
 
 <!-- <item id="GraphicsC5_C5Screen-rating" media-type="image/gif" href="GraphicsC5/C5Screen-rating.gif"/> -->
   
   <!-- table of contents [mandatory] -->
-    <item id="My_Table_of_Contents" media-type="application/x-dtbncx+xml" href="KREATA{{book.key.id}}.ncx"/>
-  
+    <item id="My_Table_of_Contents" media-type="application/x-dtbncx+xml" href="k{{book.key.id}}_KREATA{{book.key.id}}.ncx"/>
+
+{% if book.cover_key %}
   <!-- cover image [mandatory] -->
-  <item id="My_Cover" media-type="image/gif" href="cover.png"/>
+  <item id="My_Cover" media-type="image/jpeg" href="k{{book.key.id}}_cover.jpg"/>
+{% endif %}
+
 </manifest>
 
 <!--
@@ -180,16 +185,16 @@
     
 <guide>
 {% if book.use_toc %}
-    <reference type="toc" title="Table of Contents" href="toc.html"></reference>
+    <reference type="toc" title="Table of Contents" href="k{{book.key.id}}_toc.html"></reference>
 {% endif %}
 {% if book.use_index %}
-    <reference type="text" title="Welcome" href="index.html"></reference>
+    <reference type="text" title="Welcome" href="k{{book.key.id}}_index.html"></reference>
 {% else %}
 
     {% for chapter in chapters %}
 
         {% if forloop.first %}
-            <reference type="text" title="{{chapter.title|escape}}" href="chapter_{{chapter.key.id}}.html"></reference>
+            <reference type="text" title="{{chapter.title|escape}}" href="k{{book.key.id}}_chapter_{{chapter.key.id}}.html"></reference>
         {% endif %}
 
     {% endfor %}

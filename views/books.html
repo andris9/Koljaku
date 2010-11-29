@@ -1,15 +1,24 @@
 {% extends "main.html" %}
 
 
-{% block title %}Books{% endblock %}
+{% block title %}My Books{% endblock %}
+
+{% block menu %}
+<li><a href="/books">Books</a></li>
+{% endblock %}
 
 {% block body %}
 
-<h1>Books</h1>
+<h2>Books</h2>
 
 {% if books %}
 
-<table>
+<table class="formatted" width="600" cellspacing="0" cellpadding="0">
+<tr>
+    <th>Book title</th>
+    <th width="90">&nbsp;</th>
+    <th width="90">&nbsp;</th>
+</tr>
 {% for book in books %}
     <tr>
         <td>{{book.title}}</td>
@@ -23,7 +32,7 @@
 <p><a href="/book-add">Add another</a></p>
 
 {% else %}
-<p>No books!</p>
+<p>No books yet!</p>
 <p><a href="/book-add">Add one!</a></p>
 {% endif %}
 

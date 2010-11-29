@@ -1,15 +1,20 @@
 {% extends "main.html" %}
 
 
-{% block title %}jipikajee{% endblock %}
+{% block title %}Edit: {{title|escape}}{% endblock %}
+
+{% block menu %}
+<li><a href="/books">Books</a></li>
+<li><a href="/book-preview?key={{book.key}}">Preview this book</a></li>
+<li><a href="/book-edit?key={{book.key}}">Edit book details</a></li>
+<li><a href="/chapters?key={{book.key}}">Back to book contents</a></li>
+{% endblock %}
 
 {% block body %}
 
-<h1>{{title|escape}}</h1>
+<h2>Edit: {{title|escape}}</h2>
 
-
-<p><a href="/chapters?key={{book.key}}">Back to contents</a></p>
-
+<p><strong>NB!</strong> Only a small set of formatting options are available. All unsupported formatting will be removed on save.</p>
 
 <form method="post" action="/chapter-save">
 

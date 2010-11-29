@@ -1,18 +1,25 @@
 <html>
 <body>
-<p><a href="/generate-guide/Guide.opf?key={{book.key}}">Guide.opf</a></p>
-<p><a href="/generate-ncx/KREATA{{book.key.id}}.ncx?key={{book.key}}">KREATA{{book.key.id}}.ncx</a></p>
+
+<p><a href="/generate-cover/k{{book.key.id}}_cover.jpg?key={{book.key}}">k{{book.key.id}}_cover.jpg</a></p>
+
+<p><a href="/generate-guide/k{{book.key.id}}_Guide.opf?key={{book.key}}">k{{book.key.id}}_Guide.opf</a></p>
+<p><a href="/generate-ncx/k{{book.key.id}}_KREATA{{book.key.id}}.ncx?key={{book.key}}">k{{book.key.id}}_KREATA{{book.key.id}}.ncx</a></p>
+<p><a href="/generate-css/k{{book.key.id}}_KREATA.css?key={{book.key}}">k{{book.key.id}}_KREATA.css</a></p>
+
 {% if book.use_index %}
-<p><a href="/generate-item/index.html?type=index&book={{book.key}}">index.html</a></p>
+<p><a href="/generate-item/k{{book.key.id}}_index.html?type=index&book={{book.key}}">k{{book.key.id}}_index.html</a></p>
 {% endif %}
 {% if book.use_toc %}
-<p><a href="/generate-item/toc.html?type=toc&book={{book.key}}">toc.html</a></p>
+<p><a href="/generate-item/k{{book.key.id}}_toc.html?type=toc&book={{book.key}}">k{{book.key.id}}_toc.html</a></p>
 {% endif %}
 {% if book.use_copyright %}
-<p><a href="/generate-item/copyright.html?type=copyright&book={{book.key}}">copyright.html</a></p>
+<p><a href="/generate-item/k{{book.key.id}}_copyright.html?type=copyright&book={{book.key}}">k{{book.key.id}}_copyright.html</a></p>
 {% endif %}
+{%if chapters %}
 {% for chapter in chapters %}
-<p><a href="/generate-item/chapter_{{chapter.key.id}}.html?type=chapter&key={{chapter.key}}">chapter_{{chapter.key.id}}.html</a></p>
+<p><a href="/generate-item/k{{book.key.id}}_chapter_{{chapter.key.id}}.html?type=chapter&key={{chapter.key}}">k{{book.key.id}}_chapter_{{chapter.key.id}}.html</a></p>
 {% endfor %}
+{% endif %}
 </body>
 </html>

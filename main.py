@@ -21,6 +21,12 @@ from google.appengine.api import memcache
 import logging
 import math
 import string
+import datetime
+from google.appengine.api import urlfetch
+
+from google.appengine.api import images
+from google.appengine.ext import blobstore
+from google.appengine.ext.webapp import blobstore_handlers
 
 ON_PAGE = 20
 
@@ -35,6 +41,7 @@ class Book(db.Model):
   updated = db.DateTimeProperty(auto_now = True)
   title = db.StringProperty()
   author = db.StringProperty()
+  description = db.StringProperty()
   isbn = db.StringProperty()
   use_index = db.BooleanProperty(default = True)
   use_toc = db.BooleanProperty(default = True)
@@ -43,6 +50,13 @@ class Book(db.Model):
   page_toc = db.TextProperty()
   page_copyright = db.TextProperty()
   chapters = db.TextProperty()
+  cover_key = db.StringProperty()
+  cover_url = db.StringProperty()
+  converting = db.BooleanProperty(default = False)
+  conversion_status = db.StringProperty(default="")
+  conversion_time = db.DateTimeProperty()
+  conversion_key = db.StringProperty()
+  conversion_errors = db.TextProperty()
 
 class Chapter(db.Model):
   book = db.ReferenceProperty(reference_class = Book, default = None)
@@ -196,7 +210,7 @@ def gen_toc(book, chapters=None):
     i = 0
     for chapter in chapters:
         i += 1
-        toc_template +="  1. [%s](chapter_%s.html)\n" % (chapter.title and u" %s" % chapter.title or (u"Chapter %s" % i), chapter.key().id())
+        toc_template +="  1. [%s](k%s_chapter_%s.html)\n" % (chapter.title and u" %s" % chapter.title or (u"Chapter %s" % i),book.key().id(),  chapter.key().id())
             
     return string.replace(toc, "%TOC%", markdown2.markdown(toc_template))
 
@@ -209,7 +223,6 @@ def parse_html(html):
 
 def get_title(html):
     m = re.search('^\s*##([^\n]*)\n', html, flags = re.MULTILINE)
-    logging.error(m)
     if m:
         return m.group(1) or ""
     else:
@@ -271,6 +284,7 @@ class BookAddHandler(webapp.RequestHandler):
         template_values["key"] = self.request.get("key", u"")
         template_values["title"] = self.request.get("title", u"")
         template_values["author"] = self.request.get("author", u"")
+        template_values["description"] = self.request.get("description", u"")
         template_values["isbn"] = self.request.get("isbn", u"")
         template_values["use_index"] = self.request.get("use_index", False)
         template_values["use_toc"] = self.request.get("use_toc", False)
@@ -296,11 +310,16 @@ class BookEditHandler(webapp.RequestHandler):
         template_values["key"] = book.key()
         template_values["title"] = self.request.get("title", book.title)
         template_values["author"] = self.request.get("author", book.author)
+        template_values["description"] = self.request.get("description", book.description)
         template_values["isbn"] = self.request.get("isbn", book.isbn)
         template_values["use_index"] = self.request.get("use_index", book.use_index)
         template_values["use_toc"] = self.request.get("use_toc", book.use_toc)
         template_values["use_copyright"] = self.request.get("use_copyright", book.use_copyright)
         template_values["page_title"] = "Edit book"
+        
+        template_values["book"] = book
+        template_values["cover_upload"] = blobstore.create_upload_url('/cover-upload')
+        
         path = os.path.join(os.path.dirname(__file__), 'views/book_data.html')
         self.response.out.write(template.render(path, template_values))
 
@@ -325,6 +344,7 @@ class BookRemoveHandler(webapp.RequestHandler):
                 
         def remove_book():
             user_data.books -= 1
+            
             book.delete()
             if chapters:
                 db.delete(chapters)
@@ -332,6 +352,10 @@ class BookRemoveHandler(webapp.RequestHandler):
             memcache.set("<user-%s>" % (user_data.user.federated_identity() or user_data.user.user_id()), user_data)
             memcache.delete("<book-%s>" % book.key())
 
+        if book.cover_key:
+            binfo = blobstore.BlobInfo.get(book.cover_key)
+            if binfo:
+                binfo.delete()
         db.run_in_transaction(remove_book)
         self.redirect("/books")
 
@@ -344,6 +368,7 @@ class BookSaveHandler(webapp.RequestHandler):
         key = self.request.get("key", False)
         title = self.request.get("title",u"Untitled book")
         author = self.request.get("author",u"No author")
+        description = self.request.get("description",u"")
         isbn = self.request.get("isbn",u"")
 
         use_index = bool(self.request.get("use_index"))
@@ -355,6 +380,7 @@ class BookSaveHandler(webapp.RequestHandler):
             book.user = user_data
             book.title = title
             book.author = author
+            book.description = description
             book.isbn = isbn
             
             book.use_index =  use_index
@@ -374,6 +400,7 @@ class BookSaveHandler(webapp.RequestHandler):
                 return error404(self)
             book.title = title
             book.author = author
+            book.description = description
             book.isbn = isbn
             
             book.use_index =  use_index
@@ -622,12 +649,9 @@ class ChapterAddHandler(webapp.RequestHandler):
 
 class GenerateHandler(webapp.RequestHandler):
     def get(self):
-        user_data = get_user()
-        if not user_data:
-            return errorNotLoggedIn(self)
 
         key = self.request.get("key", False)
-        book = get_book(key)
+        book = get_book(key, public=True)
         if not book:
             return error404(self)
         
@@ -641,9 +665,6 @@ class GenerateHandler(webapp.RequestHandler):
 
 class GenerateItemHandler(webapp.RequestHandler):
     def get(self, name=u""):
-        user_data = get_user()
-        if not user_data:
-            return errorNotLoggedIn(self)
 
         key = self.request.get("key", False)
         book_key = self.request.get("book", False)
@@ -659,7 +680,7 @@ class GenerateItemHandler(webapp.RequestHandler):
                 title = chapter.title
                 body = chapter.body
         else:
-            book = get_book(book_key)
+            book = get_book(book_key, public=True)
         
         if not book:
             return error404(self)
@@ -685,11 +706,25 @@ class GenerateItemHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'views/generate-item.html')
         self.response.out.write(template.render(path, template_values))
 
+class GenerateCSSHandler(webapp.RequestHandler):
+    def get(self, name=u""):
+
+        key = self.request.get("key", False)
+        book = get_book(key, public=True)
+        if not book:
+            return error404(self)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        
+        self.response.headers['Content-Type'] = "text/css; charset=utf-8"
+        self.response.headers['Content-Disposition'] = """attachment; filename="%s""""" % name
+        
+        path = os.path.join(os.path.dirname(__file__), 'templates/KREATA.css')
+        self.response.out.write(template.render(path, template_values))
+
 class GenerateGuideHandler(webapp.RequestHandler):
     def get(self, name=u""):
-        user_data = get_user()
-        if not user_data:
-            return errorNotLoggedIn(self)
 
         key = self.request.get("key", False)
         book = get_book(key, public=True)
@@ -703,17 +738,39 @@ class GenerateGuideHandler(webapp.RequestHandler):
         template_values["chapters"] = chapters
         
         self.response.headers['Content-Type'] = "application/oebps-package+xml; charset=utf-8"
-        self.response.headers['Content-Disposition'] = """attachment; filename="Guide.opf"""""
+        self.response.headers['Content-Disposition'] = """attachment; filename="%s""""" % name
         
-        path = os.path.join(os.path.dirname(__file__), 'views/guide.opf')
+        path = os.path.join(os.path.dirname(__file__), 'views/Guide.opf')
         self.response.out.write(template.render(path, template_values))
+
+
+class GenerateCoverHandler(webapp.RequestHandler):
+    def get(self, name=u""):
+        key = self.request.get("key", False)
+        book = get_book(key, public=True)
+        if not book:
+            return error404(self)
+        
+        cover = False
+        if book.cover_key:
+            img = images.Image(blob_key = book.cover_key)
+            img.resize(width=600, height=800)
+            img.im_feeling_lucky()
+            cover = img.execute_transforms(output_encoding=images.PNG)
+        
+        if not cover:
+            file = open('templates/cover.jpg')
+            cover = file.read()
+            file.close()
+            
+        
+        self.response.headers['Content-Type'] = "image/jpeg"
+        self.response.headers['Content-Disposition'] = """attachment; filename="%s""""" % name
+        self.response.out.write(cover)
+
 
 class GenerateNCXHandler(webapp.RequestHandler):
     def get(self, name=u""):
-        user_data = get_user()
-        if not user_data:
-            return errorNotLoggedIn(self)
-
         key = self.request.get("key", False)
         book = get_book(key, public=True)
         if not book:
@@ -732,7 +789,7 @@ class GenerateNCXHandler(webapp.RequestHandler):
                 "id": "toc",
                 "order": i,
                 "title": "Table of contents",
-                "filename": "toc.html"
+                "filename": "k%s_toc.html" % book.key().id()
             })
         if book.use_index:
             i += 1
@@ -741,7 +798,7 @@ class GenerateNCXHandler(webapp.RequestHandler):
                 "id": "index",
                 "order": i,
                 "title": book.title,
-                "filename": "index.html"
+                "filename": "k%s_index.html" % book.key().id()
             })
         if book.use_copyright:
             i += 1
@@ -750,7 +807,7 @@ class GenerateNCXHandler(webapp.RequestHandler):
                 "id": "copyright",
                 "order": i,
                 "title": "Copyright information",
-                "filename": "copyright.html"
+                "filename": "k%s_copyright.html" % book.key().id()
             })
         
         for chapter in chapters:
@@ -760,7 +817,7 @@ class GenerateNCXHandler(webapp.RequestHandler):
                 "id": "chapter_%s" % chapter.key().id(),
                 "order": i,
                 "title": chapter.title,
-                "filename": "chapter_%s.html" % chapter.key().id()
+                "filename": "k%s_chapter_%s.html" % (book.key().id(), chapter.key().id())
             })
         
         template_values = gen_template_values(self)
@@ -769,9 +826,184 @@ class GenerateNCXHandler(webapp.RequestHandler):
         template_values["parts"] = parts
         
         self.response.headers['Content-Type'] = "application/x-dtbncx+xml; charset=utf-8"
-        self.response.headers['Content-Disposition'] = """attachment; filename="KREATA%s.ncx""""" % book.key().id()
+        self.response.headers['Content-Disposition'] = """attachment; filename="%s""""" % name
         path = os.path.join(os.path.dirname(__file__), 'views/TOC.ncx')
         self.response.out.write(template.render(path, template_values))
+
+
+class CoverUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+    def post(self):
+        key = self.request.get("key", None)
+        
+        book = get_book(key, public=True)
+        upload_files = self.get_uploads('file')  # 'file' is file upload field in the form
+        blob_info = upload_files[0]
+        
+        if not book:
+            blob_info.delete()
+            self.redirect('/error?r=1')
+            return
+        
+        old_cover = book.cover_key
+        try:
+            book.cover_key = str(blob_info.key())
+            book.cover_url = images.get_serving_url(blob_info.key(), 94)
+            book.put()
+            memcache.set("<book-%s>" % book.key(), book)
+        except:
+            blob_info.delete()
+            self.redirect('/error?r=2')
+            return
+        
+        if old_cover:
+            try:
+                binfo = blobstore.BlobInfo.get(old_cover)
+                if binfo:
+                    binfo.delete()
+            except:
+                pass        
+        self.redirect('/book-edit?key=%s' % book.key())
+
+class FinalRequestHandler(webapp.RequestHandler):
+    def post(self):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key)
+        if not book:
+            return error404(self)
+
+        chapters = get_chapters(book)
+
+        urls = []
+        urls.append("http://koljaku.appspot.com/generate-cover/k%s_cover.jpg?key=%s" % (book.key().id(), book.key()))
+        urls.append("http://koljaku.appspot.com/generate-guide/k%s_Guide.opf?key=%s" % (book.key().id(), book.key()))
+        urls.append("http://koljaku.appspot.com/generate-ncx/k%s_KREATA%s.ncx?key=%s" % (book.key().id(),book.key().id(), book.key()))
+        urls.append("http://koljaku.appspot.com/generate-css/k%s_KREATA.css?key=%s" % (book.key().id(), book.key()))
+
+        if book.use_index:
+            urls.append("http://koljaku.appspot.com/generate-item/k%s_index.html?type=index&book=%s" % (book.key().id(), book.key()))
+        if book.use_toc:
+            urls.append("http://koljaku.appspot.com/generate-item/k%s_toc.html?type=toc&book=%s" % (book.key().id(), book.key()))
+        if book.use_copyright:
+            urls.append("http://koljaku.appspot.com/generate-item/k%s_copyright.html?type=copyright&book=%s" % (book.key().id(), book.key()))
+
+        if chapters:
+            for chapter in chapters:
+                urls.append("http://koljaku.appspot.com/generate-item/k%s_chapter_%s.html?type=chapter&key=%s" % (book.key().id(), chapter.key().id(), chapter.key()))
+
+        data = {
+            "files" : urls,
+            "main":"k%s_Guide.opf" % book.key().id(),
+            "out":"k%s_BOOK.mobi" % book.key().id(),
+            "field": "file",
+            "errorCallback": "http://koljaku.appspot.com/final-error",
+            "postCallback": blobstore.create_upload_url('/final-upload'),
+            #"postCallback": "http://dev.kreata.ee/receiver.php",
+            "fields":[{"name":"key", "value": "%s" % book.key()}]
+        }
+        logging.debug(data)
+        
+        api_url = "http://node.ee/node/kindle"
+        form_fields = {
+            "data": json.dumps(data)
+        }
+        form_data = urllib.urlencode(form_fields)
+        result = urlfetch.fetch(url=api_url,
+            payload=form_data,
+            method=urlfetch.POST,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        
+        def trns():
+            book.converting=True
+            book.conversion_status="CONVERTING"
+            book.conversion_errors = u""
+            book.conversion_time = datetime.datetime.utcnow()
+            book.put()
+            memcache.set("<book-%s>" % book.key(), book)
+        
+        if result.status_code==200:
+            db.run_in_transaction(trns)
+            self.redirect("/chapters?key=%s" % key)
+        else:
+            self.redirect("/error?r=3")
+
+class FinalErrorHandler(webapp.RequestHandler):
+    def post(self):
+        key = self.request.get("key", None)
+        
+        book = get_book(key, public=True)
+        
+        if not book:
+            showError(self, "No such book")
+            return
+        
+        def trns():
+            book.converting=False
+            book.conversion_status="ERROR"
+            book_conversion_errors = self.request.get("message",u"")
+            book.put()
+            memcache.set("<book-%s>" % book.key(), book)
+        db.run_in_transaction(trns)
+        
+        self.response.out.write("OK")
+
+class FinalUploadHandler(blobstore_handlers.BlobstoreUploadHandler):
+    def post(self):
+        
+        upload_files = self.get_uploads('file')  # 'file' is file upload field in the form
+        blob_info = upload_files[0]
+        
+        key = self.request.get("key", None)
+        book = get_book(key, public=True)
+        if not book:
+            blob_info.delete()
+            raise NameError('HiThere')
+            return
+        
+        old_conversion = book.conversion_key
+        try:
+            book.conversion_key = str(blob_info.key())
+            book.conversion_status = "OK"
+            book.converting = False
+            book.put()
+            memcache.set("<book-%s>" % book.key(), book)
+        except:
+            blob_info.delete()
+            raise NameError('HiThere')
+            return
+        
+        if old_conversion:
+            try:
+                binfo = blobstore.BlobInfo.get(old_conversion)
+                if binfo:
+                    binfo.delete()
+            except:
+                pass        
+        self.redirect('/')
+
+class FinalServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, name=""):
+        
+        user_data = get_user()
+        logging.debug(user_data)
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key)
+        if not book:
+            return error404(self)
+        if not book.conversion_key:
+            return error404(self)
+        
+        blob_info = blobstore.BlobInfo.get(book.conversion_key)
+        if not book.conversion_key:
+            return error404(self)
+        
+        self.send_blob(blob_info)
 
 
 class LoggedHandler(webapp.RequestHandler):
@@ -813,6 +1045,16 @@ class LoginHandler(webapp.RequestHandler):
                     federated_identity=self.request.get("openid", None))
         self.redirect(url)
 
+class ErrorHandler(webapp.RequestHandler):
+    def get(self):
+        showError(self, message="Error occured")
+    def post(self):
+        self.get()
+
+class FlushHandler(webapp.RequestHandler):
+    def get(self):
+        memcache.flush_all()
+        self.response.out.write("Memcache flushed!")
 
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
@@ -835,7 +1077,16 @@ def main():
                                           ('/generate', GenerateHandler),
                                           (r'/generate-guide/(.*)', GenerateGuideHandler),
                                           (r'/generate-ncx/(.*)', GenerateNCXHandler),
-                                          (r'/generate-item/(.*)', GenerateItemHandler)],
+                                          (r'/generate-cover/(.*)', GenerateCoverHandler),
+                                          (r'/generate-item/(.*)', GenerateItemHandler),
+                                          (r'/generate-css/(.*)', GenerateCSSHandler),
+                                          ('/cover-upload', CoverUploadHandler),
+                                          ('/final-upload', FinalUploadHandler),
+                                          ('/final-error', FinalErrorHandler),
+                                          ('/final-request', FinalRequestHandler),
+                                          (r'/final-serve/(.*)', FinalServeHandler),
+                                          ('/error', ErrorHandler),
+                                          ('/flush', FlushHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 

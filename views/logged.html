@@ -3,18 +3,24 @@
 
 {% block title %}Logged in{% endblock %}
 
+{% block menu %}
+<li><a href="/books">Books</a></li>
+{% endblock %}
+
 {% block body %}
 
-<h1>Successfully logged in!</h1>
+<h2>Successfully logged in!</h2>
 
-<p><a href="/books">Your books</a></p>
+<p><a href="/books">Click here for your books</a></p>
 
 {% if user_data %}
+<!-- 
 nickname: {{ user_data.user.nickname }}<br />
 email: {{ user_data.user.email }}<br />
 user_id: {{ user_data.user.user_id }}<br />
 federated_identity: {{ user_data.user.federated_identity }}<br />
 federated_provider: {{ user_data.user.federated_provider }}<br />
+ -->
 {% endif %}
 
 {% endblock %}

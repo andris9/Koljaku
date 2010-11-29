@@ -1,17 +1,55 @@
 {% extends "main.html" %}
 
 
-{% block title %}Contents for {{book.title|escape}}{% endblock %}
+{% block title %}Book: {{book.title|escape}}{% endblock %}
+
+{% block menu %}
+<li><a href="/books">Books</a></li>
+<li><a href="/book-preview?key={{book.key}}">Preview this book</a></li>
+<li><a href="/book-edit?key={{book.key}}">Edit book details</a></li>
+{% endblock %}
 
 {% block body %}
 
-<h1>Contents for {{book.title|escape}}</h1>
+<p class="floating-cover">
+    <a href="/book-edit?key={{book.key}}"><img src="{% if book.cover_url %}{{book.cover_url}}{% else %}/static/images/sample-cover.jpg{% endif %}" alt="cover image for {{title|escape}}"/><br />
+    Click to edit
+    </a>
+</p>
+<div style="margin-left: 100px">
+<h2>Book: {{book.title|escape}}</h2>
 
-<p><a href="/books">Back to books</a></p>
+{% if chapters %}
+<div class="conversion">
+{% if book.converting %}
+<p><em>Generating book file... <a href="javascript:window.location.reload(true)">Refresh</a></em></p>
+{% else %}
 
-<p><a href="/book-preview?key={{book.key}}">Preview this book</a></p>
+    {% ifequal book.conversion_status "OK" %}
 
-<h2>Special</h2>
+        {% if book.conversion_key %}
+            <p><a href="/final-serve/export.mobi?key={{book.key}}"><strong>Download e-book</strong></a></p>
+        {% endif %}
+    
+    {% else %}
+        {% ifequal book.conversion_status "ERROR" %}
+        <p>E-book generation failed</p>
+        {% endifequal %}
+    {% endifequal %}
+
+
+    <form id="vorm" method="post" action="/final-request?key={{book.key}}">
+        <p>
+            <a href="javascript:void(0)" onclick="document.getElementById('vorm').submit()">Generate a new e-book file</a>
+        </p>
+    </form>
+{% endif %}
+</div>
+{% endif %}
+</div>
+<div style="clear: both;"></div>
+
+<h3>Special chapters</h3>
 
 <ul>
 {% if book.use_index %}
@@ -28,7 +66,7 @@
 
 </ul>
 
-<h2>Chapters</h2>
+<h3>Chapters</h3>
 
 {% if chapters %}
 
