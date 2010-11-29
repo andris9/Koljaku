@@ -356,6 +356,10 @@ class BookRemoveHandler(webapp.RequestHandler):
             binfo = blobstore.BlobInfo.get(book.cover_key)
             if binfo:
                 binfo.delete()
+        if book.conversion_key:
+            binfo = blobstore.BlobInfo.get(book.conversion_key)
+            if binfo:
+                binfo.delete()
         db.run_in_transaction(remove_book)
         self.redirect("/books")
 
@@ -899,7 +903,7 @@ class FinalRequestHandler(webapp.RequestHandler):
             "main":"k%s_Guide.opf" % book.key().id(),
             "out":"k%s_BOOK.mobi" % book.key().id(),
             "field": "file",
-            "errorCallback": "http://koljaku.appspot.com/final-error",
+            "errorCallback": "http://koljaku.appspot.com/final-error?key=%s" % book.key(),
             "postCallback": blobstore.create_upload_url('/final-upload'),
             #"postCallback": "http://dev.kreata.ee/receiver.php",
             "fields":[{"name":"key", "value": "%s" % book.key()}]
@@ -933,6 +937,8 @@ class FinalRequestHandler(webapp.RequestHandler):
 class FinalErrorHandler(webapp.RequestHandler):
     def post(self):
         key = self.request.get("key", None)
+        
+        logging.debug(self.request.get("messages"))
         
         book = get_book(key, public=True)
         

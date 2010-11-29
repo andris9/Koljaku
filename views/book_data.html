@@ -61,7 +61,7 @@
 </p>
 <div style="margin-left: 100px">
 <h3>Upload cover image</h3>
-<p><strong>NB!</strong> Cover image dimensions should be 600x800 pixels</p>
+<p><strong>NB!</strong> Cover image dimensions should be 600x800 pixels or with aspect ratio 3:4<br />The image will be resized to fit into 600x800 area and if one side of the resulting image is smaller than 500 pixels, then e-book generation will fail.</p>
 <form action="{{cover_upload}}" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="key" value="{{key|escape}}"/>
     <p>Select file (PNG, JPEG, GIF): <input type="file" name="file"><br> <input type="submit" name="submit" value="Upload image"></p>

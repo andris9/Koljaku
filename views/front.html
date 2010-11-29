@@ -3,6 +3,12 @@
 
 {% block title %}Welcome!{% endblock %}
 
+{% block menu %}
+{% if user %}
+<li><a href="/books">Books</a></li>
+{% endif %}
+{% endblock %}
+
 {% block body %}
 
 <h2>Welcome!</h2>

@@ -3,12 +3,16 @@
 
 {% block title %}jipikajee{% endblock %}
 
+{% block menu %}
+<li><a href="/books">Books</a></li>
+<li><a href="/book-preview?key={{book.key}}">Preview this book</a></li>
+<li><a href="/book-edit?key={{book.key}}">Edit book details</a></li>
+<li><a href="/chapters?key={{book.key}}">Back to book contents</a></li>
+{% endblock %}
+
 {% block body %}
 
-<h1>Preview</h1>
-
-
-<p><a href="/chapters?key={{book.key}}">Back to contents</a></p>
+<h2>Preview</h2>
 
 <div class="preview">
 

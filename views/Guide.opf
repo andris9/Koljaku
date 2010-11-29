@@ -32,12 +32,10 @@
   -->
     <dc:language>en-us</dc:language>
 
-{% if book.cover_key %}
   <!-- Cover [mandatory]. The cover image must be specified in <manifest> and referenced from
   this <meta> element with a name="cover" attribute.
   -->
   <meta name="cover" content="My_Cover" />
-{% endif %}
 
 {% if book.isbn %}
   <!-- The ISBN of your book goes here -->
@@ -120,10 +118,8 @@
   <!-- table of contents [mandatory] -->
     <item id="My_Table_of_Contents" media-type="application/x-dtbncx+xml" href="k{{book.key.id}}_KREATA{{book.key.id}}.ncx"/>
 
-{% if book.cover_key %}
   <!-- cover image [mandatory] -->
   <item id="My_Cover" media-type="image/jpeg" href="k{{book.key.id}}_cover.jpg"/>
-{% endif %}
 
 </manifest>
 
