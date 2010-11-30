@@ -217,6 +217,7 @@ def gen_toc(book, chapters=None):
 
 def parse_html(html):
     # siin peaks olema ka muu loogika, lehevahetused jne
+    
     md = html2markdown.html2text(html)
     title = get_title(md)
     return [markdown2.markdown(md), title]
@@ -951,7 +952,7 @@ class FinalErrorHandler(webapp.RequestHandler):
         def trns():
             book.converting=False
             book.conversion_status="ERROR"
-            book_conversion_errors = self.request.get("message",u"")
+            book.conversion_errors = self.request.get("message",u"")
             book.put()
             memcache.set("<book-%s>" % book.key(), book)
         db.run_in_transaction(trns)
