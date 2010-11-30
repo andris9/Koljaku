@@ -17,6 +17,11 @@
 
 <p>Be warned - this is a work in progress project, just a working prototype.</p>
 
+{% if user %}
+<h3 class="underline">Your books</h3>
+<p><a href="/books">Go to your books</a></p>
+{% endif %}
+
 <div style="padding-top: 20px;">
 
 <div style="float: left; margin: 2px; padding: 3px; border: 1px solid #EEE;"><img src="/static/images/s3.png" style="" /></div>
@@ -25,8 +30,10 @@
 </div>
 <div style="clear: both"></div>
 
-{% if user %}
-<p><a href="/books">Go to your books</a></p>
-{% endif %}
+<h3 class="underline">Sample</h3>
+
+<p>Download sample e-book created with <em>kindlegenerator</em></p>
+<p class="download"><a href="/static/export/treasure_island.mobi">Treasure Island by Robert Louis Stevenson</a> (676 kB)</p>
+
 
 {% endblock %}
