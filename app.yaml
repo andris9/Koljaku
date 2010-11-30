@@ -20,11 +20,9 @@ handlers:
 
 - url: /tinymce/.* 
   script: $PYTHON_LIB/google/appengine/ext/zipserve
-  expiration: "365d"
 
 - url: /icons/.* 
   script: $PYTHON_LIB/google/appengine/ext/zipserve
-  expiration: "365d"
   
 - url: /static
   static_dir: static/static
