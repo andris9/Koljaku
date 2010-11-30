@@ -18,6 +18,12 @@ handlers:
   script: $PYTHON_LIB/google/appengine/ext/admin
   login: admin
 
+- url: /tinymce/.* 
+  script: $PYTHON_LIB/google/appengine/ext/zipserve
+
+- url: /icons/.* 
+  script: $PYTHON_LIB/google/appengine/ext/zipserve
+  
 - url: /static
   static_dir: static/static
 

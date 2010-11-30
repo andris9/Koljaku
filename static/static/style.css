@@ -2,6 +2,42 @@
 
 body{
     font-family: Helvetica, Arial, Sans-serif;
+    font-size: 13px;
+}
+
+#main{
+    width: 800px;
+    margin: 0px auto;
+}
+
+#contents, #header, #footer{
+    padding: 5px 15px;
+}
+
+#contents{
+    clear: both;
+    padding-top: 15px; 
+}
+
+#footer{
+    clear: both;
+    padding-top: 20px;
+    color: #999;
+    font-size: 11px; 
+}
+
+.pgp{
+    border-top: 1px dotted #CCC;
+    margin: 5px 0; 
+}
+
+a{
+    color: #4096EE;
+    text-decoration: none;
+}
+
+a:hover{
+    color: #2580a2;
 }
 
 .preview{
@@ -42,9 +78,39 @@ body{
     font-size: 21px;
 }
 
-#contents{
-    padding-top: 25px;
+
+.preview p
+{
+    margin-top: 1em;
+    text-indent: 0em
 }
+
+.preview .pagebreak
+{
+    page-break-before: always;
+}
+
+.preview .centered
+{
+    text-align: center;
+}
+
+.preview .bottom
+{
+    vertical-align: text-bottom;
+}
+
+.preview .tablehead
+{
+    text-align: center;
+    font-weight: bold
+}
+
+.preview H1 {margin-top: 1em}
+.preview H2 {margin-top: 1em}
+.preview H3 {margin-top: 1em}
+.preview H4 {margin-top: 1em}
+
 
 #menu {
 	background: #333;
@@ -56,7 +122,7 @@ body{
 }
 #menu li {
 	float: left;
-	font: 67.5% "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
+	font: 11px "Lucida Sans Unicode", "Bitstream Vera Sans", "Trebuchet Unicode MS", "Lucida Grande", Verdana, Helvetica, sans-serif;
 	margin: 0;
 	padding: 0;
 }
@@ -75,12 +141,27 @@ body{
 	padding-bottom: 8px;
 }
 
-.openid{
-    padding-left: 19px;
+.data, .openid{
     border: 1px solid #CCC;
     font-size: 12px;
+    padding: 3px;
+}
+
+.openid{
+    padding-left: 19px;
     background: url(/static/images/openid-icon.png) no-repeat 2px center;
-    width: 200px;
+}
+
+input.long{
+    width: 300px;
+}
+
+input.middle{
+    width: 100px;
+}
+
+input.short{
+    width: 40px;
 }
 
 table.formatted{
@@ -119,4 +200,28 @@ table.formatted td, table.formatted th{
 .conversion{
     background: #FAFAFA;
     padding: 5px;
+}
+
+.underline{
+    border-bottom: 1px dashed #AAA;
+}
+
+.plus{
+    background: url(/icons/103.png) no-repeat left center;
+    padding-left: 18px;
+}
+
+.download{
+    background: url(/icons/193.png) no-repeat left center;
+    padding-left: 18px;
+}
+
+.generate{
+    background: url(/icons/123.png) no-repeat left center;
+    padding-left: 18px;
+}
+
+.remove{
+    background: url(/icons/101.png) no-repeat left center;
+    padding-left: 18px;
 }

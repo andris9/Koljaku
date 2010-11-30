@@ -1,7 +1,7 @@
 {% extends "main.html" %}
 
 
-{% block title %}jipikajee{% endblock %}
+{% block title %}Preview{% endblock %}
 
 {% block menu %}
 <li><a href="/books">Books</a></li>
@@ -20,25 +20,34 @@
 <div id="ch-index">
 {{index}}
 </div>
+<div class="pgp"></div>
 {% endif %}
 
 {% if book.use_copyright %}
 <div id="ch-copyright">
 {{copyright}}
 </div>
+<div class="pgp"></div>
 {% endif %}
+
+
 
 {% if book.use_toc %}
 <div id="ch-toc">
 {{toc}}
 </div>
+<div class="pgp"></div>
 {% endif %}
+
+
 
 {% if chapters %}
 {% for chapter in chapters %}
 <div id="ch-{{chapter.key.id}}">
 {{chapter.body}}
 </div>
+
+<div class="pgp"></div>
 {% endfor %}
 {% endif %}
 

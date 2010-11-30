@@ -16,7 +16,7 @@
 
 <h2>{{page_title}}</h2>
 
-
+<h3 class="underline">General details</h3>
 <form method="post" action="/book-save">
 
 <input type="hidden" name="key" value="{{key|escape}}"/>
@@ -24,19 +24,19 @@
 <table>
     <tr>
         <td>Title</td>
-        <td><input type="text" name="title" value="{{title|escape}}" /></td>
+        <td><input type="text" class="data long" name="title" value="{{title|escape}}" /></td>
     </tr>
     <tr>
         <td>Author</td>
-        <td><input type="text" name="author" value="{{author|escape}}" /></td>
+        <td><input type="text" class="data long" name="author" value="{{author|escape}}" /></td>
     </tr>
     <tr>
         <td>Description</td>
-        <td><input type="text" name="description" value="{{description|escape}}" /></td>
+        <td><input type="text" class="data long" name="description" value="{{description|escape}}" /></td>
     </tr>
     <tr>
         <td>ISBN</td>
-        <td><input type="text" name="isbn" value="{{isbn|escape}}" /></td>
+        <td><input type="text" class="data middle" name="isbn" value="{{isbn|escape}}" /></td>
     </tr>
     <tr>
         <td colspan="2"><label><input type="checkbox" name="use_index" {% if use_index %}checked="true"{% endif %} /> use index page</label></td>
@@ -55,12 +55,14 @@
 
 </form>
 
+<div style="clear: both; padding: 5px;"></div>
+
 {% if key %}
+<h3 class="underline">Upload cover image</h3>
 <p class="floating-cover">
    <img src="{% if book.cover_url %}{{book.cover_url}}{% else %}/static/images/sample-cover.jpg{% endif %}" alt="cover image for {{title|escape}}"/>
 </p>
 <div style="margin-left: 100px">
-<h3>Upload cover image</h3>
 <p><strong>NB!</strong> Cover image dimensions should be 600x800 pixels or with aspect ratio 3:4<br />The image will be resized to fit into 600x800 area and if one side of the resulting image is smaller than 500 pixels, then e-book generation will fail.</p>
 <form action="{{cover_upload}}" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="key" value="{{key|escape}}"/>
@@ -68,9 +70,10 @@
 </form>
 </div>
 
-<div style="clear: both;"></div>
+<div style="clear: both; padding: 5px;"></div>
 
-<p style="margin-top: 30px"><a href="/book-remove?key={{key|escape}}" onclick="return confirm('Are you sure')">Delete this book</a></p>
+<h3 class="underline">Delete book</h3>
+<p class="remove"><a href="/book-remove?key={{key|escape}}" onclick="return confirm('Are you sure?\nThis action can\'t be taken back!')">Delete this book</a></p>
 {% endif %}
 
 {% endblock %}

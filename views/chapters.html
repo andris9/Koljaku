@@ -16,40 +16,47 @@
     Click to edit
     </a>
 </p>
-<div style="margin-left: 100px">
-<h2>Book: {{book.title|escape}}</h2>
+<div style="margin-left: 100px;">
+<h2>{{book.title|escape}}</h2>
 
 {% if chapters %}
 <div class="conversion">
 {% if book.converting %}
-<p><em>Generating book file... <a href="javascript:window.location.reload(true)">Refresh</a></em></p>
+<p><em>Generating ebook file... <a href="javascript:window.location.reload(true)">Refresh</a></em></p>
 {% else %}
 
     {% ifequal book.conversion_status "OK" %}
 
         {% if book.conversion_key %}
-            <p><a href="/final-serve/export.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated {{book.conversion_time}})</p>
+            <p class="download"><a href="/final-serve/export.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated {{book.conversion_time}})</p>
         {% endif %}
     
     {% else %}
         {% ifequal book.conversion_status "ERROR" %}
         <p>E-book generation failed</p>
+        <p>Log:</p>
+        <pre>{{book.conversion_errors}}</pre>
         {% endifequal %}
     {% endifequal %}
 
 
     <form id="vorm" method="post" action="/final-request?key={{book.key}}">
-        <p>
+        <p class="generate">
             <a href="javascript:void(0)" onclick="document.getElementById('vorm').submit()">Generate a new e-book file</a>
         </p>
     </form>
 {% endif %}
 </div>
+{% else %}
+<div class="conversion">
+<b>NB!</b> You need to <a href="/chapter-add?book={{book.key}}">add chapters</a> before you can generate an ebook file!
+</div>
 {% endif %}
 </div>
 <div style="clear: both;"></div>
 
-<h3>Special chapters</h3>
+{% if specials %}
+<h3 class="underline">Special pages</h3>
 
 <ul>
 {% if book.use_index %}
@@ -65,8 +72,9 @@
 {% endif %}
 
 </ul>
+{% endif %}
 
-<h3>Chapters</h3>
+<h3 class="underline">Chapters</h3>
 
 {% if chapters %}
 
@@ -76,11 +84,11 @@
     {% endfor %}
 </ul>
 
-<p><a href="/chapter-add?book={{book.key}}">Add another</a></p>
+<p class="plus"><a href="/chapter-add?book={{book.key}}">Add another</a></p>
 
 {% else %}
-<p>No chapters yet!</p>
-<p><a href="/chapter-add?book={{book.key}}">Add one!</a></p>
+<p><em>No chapters yet!</em></p>
+<p class="plus"><a href="/chapter-add?book={{book.key}}">Add one!</a></p>
 {% endif %}
 
 {% endblock %}

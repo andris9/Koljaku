@@ -475,6 +475,8 @@ class ChapterListHandler(webapp.RequestHandler):
         template_values = gen_template_values(self)
         template_values["book"] = book
         template_values["chapters"] = chapters
+        template_values["specials"] = book.use_index or book.use_toc or book.use_copyright
+        logging.debug(book.use_index or book.use_toc or book.use_copyright)
         path = os.path.join(os.path.dirname(__file__), 'views/chapters.html')
         self.response.out.write(template.render(path, template_values))
         
