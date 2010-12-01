@@ -6,8 +6,16 @@
         <link href="/static/style.css" rel="stylesheet" type="text/css" />
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
+        <script src="http://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js"></script>
+{% block head %}{% endblock %}
         
-    {% block head %}{% endblock %}
+        <script type="text/javascript">
+            function closeMessage(element){
+                element = $(element);
+                if(!element)return;
+                element.fade();
+            }
+        </script>
         
     </head>
     <body>
@@ -25,11 +33,22 @@
                     <li><a href="/logout" title="Log out">Log out</a></li>
                     {% else %}
                     <li><a href="/login" title="Log in">Log in</a></li>
-                {% endif %}
-             
-            </ul> 
-        
+                    {% endif %}
+                </ul> 
             </div>
+            <div style="clear: both"></div>
+            {% if flash_ok %}
+            <div class="flash-ok" onclick="closeMessage(this);">
+                <div class="close"></div>
+                <div class="message">{{flash_ok}}</div>
+            </div>
+            {% endif %}
+            {% if flash_error %}
+            <div class="flash-error" onclick="closeMessage(this);">
+                <div class="close"></div>
+                <div class="message">{{flash_error}}</div>
+            </div>
+            {% endif %}
             <div id="contents">{% block body %}Not found!{% endblock %}</div>
             
             <div id="footer">&copy; 2010 Kreata OÜ, andris@kreata.ee<br />Kindle™ is a trademark of Amazon.com, Inc. or its affiliates in the United States and/or other countries. 

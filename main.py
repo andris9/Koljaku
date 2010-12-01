@@ -62,6 +62,14 @@ class Chapter(db.Model):
   book = db.ReferenceProperty(reference_class = Book, default = None)
   title = db.StringProperty()
   body = db.TextProperty()
+  advanced = db.BooleanProperty(default = False)
+  added = db.DateTimeProperty(auto_now_add = True)
+  updated = db.DateTimeProperty(auto_now = True)
+
+class Images(db.Model):
+  book = db.ReferenceProperty(reference_class = Book, default = None)
+  file = db.BlobProperty()
+  added = db.DateTimeProperty(auto_now_add = True)
 
 def get_user(user = None):
     if not user:
@@ -196,8 +204,12 @@ def gen_paging(page, pages, url):
 
 def gen_template_values(http):
     template_values = {
-        "user": users.get_current_user()
+        "user": users.get_current_user(),
+        "flash_ok": memcache.get("flash-ok"),
+        "flash_error": memcache.get("flash-error")
     }
+    memcache.delete("flash-ok")
+    memcache.delete("flash-error")
     return template_values
 
 def gen_toc(book, chapters=None):
@@ -564,9 +576,14 @@ class ChapterSaveHandler(webapp.RequestHandler):
         contents = data[0]
         title = data[1]
         
-        def save_special(book):
+        page_title = u""
+        
+        target = {"url": "/chapters?key=%s" % book.key()}
+        
+        def save_special(book, target):
             book.put()
             memcache.set("<book-%s>" % book.key(), book)
+            target["url"] = "/chapter-%s?book=%s" %(type, book.key())
         
         def save_normal(book, chapter):
             rearrange = False
@@ -578,6 +595,8 @@ class ChapterSaveHandler(webapp.RequestHandler):
             chapter.title = title
             chapter.body = contents
             chapter.put()
+
+            target["url"] = "/chapter?key=%s" % chapter.key()
             
             if rearrange:
                 chapter_queue = book.chapters and json.loads(book.chapters) or []
@@ -585,26 +604,31 @@ class ChapterSaveHandler(webapp.RequestHandler):
                 book.chapters = json.dumps(chapter_queue)
                 book.put()
                 memcache.set("<book-%s>" % book.key(), book)
+
             memcache.set("<chapter-%s>" % chapter.key(), chapter)
             
         
         if type=="index":
             book.page_index = contents
-            save_special(book)
+            db.run_in_transaction(save_special, book)
+            page_title ="Index page"
         elif type=="toc":
             book.page_toc = contents
-            save_special(book)
+            db.run_in_transaction(save_special, book)
+            page_title ="Table of Contents page"
         elif type=="copyright":
             book.page_copyright = contents
-            save_special(book)
+            db.run_in_transaction(save_special, book)
+            page_title ="Copyright page"
         elif type=="normal":
             chapter = get_chapter(key)
             db.run_in_transaction(save_normal, book, chapter)
+            page_title ="Chapter %s" % title
         else:
             return error404(self)
 
-        
-        self.redirect("/chapters?key=%s" % book.key())
+        memcache.set("flash-ok", "<strong>%s</strong> saved successfully" % page_title)
+        self.redirect(target["url"])
 
 class ChapterHandler(webapp.RequestHandler):
     def get(self):

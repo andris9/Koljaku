@@ -16,7 +16,7 @@ body{
 
 #contents{
     clear: both;
-    padding-top: 15px; 
+    padding-top: 10px; 
 }
 
 #footer{
@@ -224,4 +224,38 @@ table.formatted td, table.formatted th{
 .remove{
     background: url(/icons/101.png) no-repeat left center;
     padding-left: 18px;
+}
+
+.flash-ok, .flash-error{
+	clear: both;
+    margin: 5px 0;
+    position: relative;
+}
+
+.flash-ok{
+	border: 1px solid #008C00;
+    background: #CDEB8B;
+    color: black;
+}
+
+.flash-error{
+	border: 1px solid #B02B2C;
+    background: #D01F3C;
+    color: black;
+}
+
+.flash-ok .close, .flash-error .close{
+	position: absolute;
+	z-index: 1;
+	right: 3px;
+	top: 3px;
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	background: url(/icons/130.png) no-repeat center center;
+}
+
+.flash-ok .message, .flash-error .message{
+    padding: 10px;
+    text-align: center;
 }
