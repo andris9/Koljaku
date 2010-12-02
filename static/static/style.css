@@ -19,6 +19,10 @@ body{
     padding-top: 10px; 
 }
 
+a img{
+    border:0;
+}
+
 #footer{
     clear: both;
     padding-top: 20px;

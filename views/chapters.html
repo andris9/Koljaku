@@ -12,7 +12,7 @@
 {% block body %}
 
 <p class="floating-cover">
-    <a href="/book-edit?key={{book.key}}"><img src="{% if book.cover_url %}{{book.cover_url}}{% else %}/static/images/sample-cover.jpg{% endif %}" alt="cover image for {{title|escape}}"/><br />
+    <a href="/book-edit?key={{book.key}}"><img src="{% if book.cover_url %}{{book.cover_url}}{% else %}/static/images/sample-cover.jpg{% endif %}" alt="cover image for {{book.title|escape}}"/><br />
     Click to edit
     </a>
 </p>
@@ -28,7 +28,7 @@
     {% ifequal book.conversion_status "OK" %}
 
         {% if book.conversion_key %}
-            <p class="download"><a href="/final-serve/{{title|urlencode}}.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated <em>{{book.conversion_time}} GMT</em>)</p>
+            <p class="download"><a href="/final-serve/{{book.title|urlencode}}.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated <em>{{book.conversion_time}} GMT</em>)</p>
         {% endif %}
     
     {% else %}
