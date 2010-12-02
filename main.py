@@ -230,12 +230,36 @@ def gen_toc(book, chapters=None):
 def parse_html(html):
     # siin peaks olema ka muu loogika, lehevahetused jne
     
+    html = re.sub(r'<[bB][rR][^>]*?>','%%%BRBREAK%%%', html)
+    html = re.sub(r'<[pP][^>]*?>(&nbsp;|\s)*?</[pP][^>]*?>','%%%EMPTYP%%%', html)
+    html = re.sub(r'<[sS][uU][bB][^>]*?>','%%%SUBSTART%%%', html)
+    html = re.sub(r'</[sS][uU][bB][^>]*?>','%%%SUBEND%%%', html)
+    html = re.sub(r'<[sS][uU][pP][^>]*?>','%%%SUPSTART%%%', html)
+    html = re.sub(r'</[sS][uU][pP][^>]*?>','%%%SUPEND%%%', html)
+    
+    html = re.sub(r'([tT][eE][xX][tT]-[aA][lL][iI][gG][nN]:\s*([a-zA-Z]*)[^>]*?>)',r'\1%%%ALIGN\2%%%', html)
+    
+    logging.error(html)
+    
     md = html2markdown.html2text(html)
-    title = get_title(md)
-    return [markdown2.markdown(md), title]
+    title = get_title(re.sub(r'%%%[a-zA-Z]*?%%%','', md))
+    
+    md = md.replace('%%%BRBREAK%%%',"<br />")
+    md = md.replace('%%%EMPTYP%%%',"<p>&nbsp;</p>")
+    md = md.replace('%%%SUBSTART%%%',"<sub>")
+    md = md.replace('%%%SUBEND%%%',"</sub>")
+    md = md.replace('%%%SUPSTART%%%',"<sup>")
+    md = md.replace('%%%SUPEND%%%',"</sup>")
+    logging.error(md)
+
+    html = markdown2.markdown(md)
+    html = re.sub(r'>\s*%%%ALIGN([a-zA-Z]*?)%%%',r' style="text-align: \1">', html)
+    
+    logging.error(html)
+    return [html, title]
 
 def get_title(html):
-    m = re.search('^\s*##([^\n]*)\n', html, flags = re.MULTILINE)
+    m = re.search('^\s*##(?!#)([^\n]*)\n', html, flags = re.MULTILINE)
     if m:
         return m.group(1) or ""
     else:
@@ -580,7 +604,7 @@ class ChapterSaveHandler(webapp.RequestHandler):
         
         target = {"url": "/chapters?key=%s" % book.key()}
         
-        def save_special(book, target):
+        def save_special(book):
             book.put()
             memcache.set("<book-%s>" % book.key(), book)
             target["url"] = "/chapter-%s?book=%s" %(type, book.key())

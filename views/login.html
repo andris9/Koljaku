@@ -3,6 +3,15 @@
 
 {% block title %}Log in{% endblock %}
 
+{% block head %}
+        <script>
+            function run_openid(provider){
+                $("openid").value = provider;
+                $("openid_alternate").submit();
+            }
+        </script>
+{% endblock %}
+
 {% block body %}
 
 <h2>Log in</h2>
@@ -10,9 +19,21 @@
 <form id="vorm" method="post" action="/login">
     <input type="hidden" name="target_url" value="{{ target_url }}"/>
     <p>
-        <p>Log in with <a href="http://openid.net">OpenID</a> (<small>leave blank for google accounts</small>):</p>
-        <p><input type="text" name="openid" id="openid" class="openid long" value="" /> <input type="submit" name="nupp" value="Log in" /></p>
+        <p>Log in with <a href="http://openid.net">OpenID</a>:</p>
+        <p><input type="text" name="openid" class="openid long" value="" /> <input type="submit" name="nupp" value="Log in" /></p>
+        <p>or log in with:</p>
+        <div>
+            <div class="login_button login-google" onclick="run_openid('https://www.google.com/accounts/o8/id')"></div>
+            <div class="login_button login-yahoo" onclick="run_openid('http://me.yahoo.com')"></div>
+            <div style="clear: both"></div>
+        </div>
+        
     </p> 
+</form>
+
+<form id="openid_alternate"  method="post" action="/login">
+    <input type="hidden" name="target_url" value="{{ target_url }}"/>
+    <input type="hidden" name="openid" id="openid"/>
 </form>
 
 {% endblock %}

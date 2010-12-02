@@ -6,6 +6,11 @@ p
 	text-indent: 0em
 }
 
+blockquote
+{
+    margin-left: 1em;
+}
+
 .pagebreak
 {
 	page-break-before: always;

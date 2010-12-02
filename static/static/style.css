@@ -264,3 +264,28 @@ table.formatted td, table.formatted th{
     padding: 10px;
     text-align: center;
 }
+
+.login_button{
+    float: left;
+    cursor:pointer;
+    border: 1px solid #DADADA;
+    margin-right: 2px;
+    padding: 2px;
+    background-position: center center;
+    background-repeat: no-repeat;
+
+    width: 115px;
+    height: 30px;    
+}
+
+.login_button:hover{
+    border: 1px solid #2580a2;
+}
+
+.login-google{
+    background-image: url(/static/images/google-logo.png);
+}
+
+.login-yahoo{
+    background-image: url(/static/images/yahoo-logo.png);
+}
