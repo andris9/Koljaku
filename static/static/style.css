@@ -165,20 +165,16 @@ input.short{
 }
 
 table.formatted{
-    border-left: 1px solid #CCC;
-    border-top: 1px solid #CCC;
 }
 
 table.formatted th{
-    background:  #333;
-    color: white;
+    color:  #333;
+    border-bottom: 1px dotted #333;
     text-align: left;
     font-weight: bold;
 }
 
 table.formatted td, table.formatted th{
-    border-right: 1px solid #CCC;
-    border-bottom: 1px solid #CCC;
     padding: 3px 5px;
 }
 
@@ -226,6 +222,11 @@ table.formatted td, table.formatted th{
     padding-left: 18px;
 }
 
+.bookdir{
+    background: url(/icons/046.png) no-repeat left center;
+    padding-left: 18px;
+}
+
 .flash-ok, .flash-error{
 	clear: both;
     margin: 5px 0;
@@ -252,7 +253,7 @@ table.formatted td, table.formatted th{
 	width: 16px;
 	height: 16px;
 	cursor: pointer;
-	background: url(/icons/130.png) no-repeat center center;
+	background: url(/icons/101.png) no-repeat center center;
 }
 
 .flash-ok .message, .flash-error .message{

@@ -13,7 +13,7 @@
 
 {% if books %}
 
-<table class="formatted" width="600" cellspacing="0" cellpadding="0">
+<table class="formatted" width="768" cellspacing="0" cellpadding="0">
 <tr>
     <th>Book title</th>
     <th width="90">&nbsp;</th>
@@ -29,11 +29,11 @@
 {% endfor %}
 </table>
 
-<p><a href="/book-add">Add another</a></p>
+<p class="plus"><a href="/book-add">Add another</a></p>
 
 {% else %}
 <p>No books yet!</p>
-<p><a href="/book-add">Add one!</a></p>
+<p class="plus"><a href="/book-add">Add one!</a></p>
 {% endif %}
 
 {% if paging %}

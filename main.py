@@ -1089,6 +1089,20 @@ class FlushHandler(webapp.RequestHandler):
         memcache.flush_all()
         self.response.out.write("Memcache flushed!")
 
+def redirect_from_appspot(wsgi_app):
+    def redirect_if_needed(env, start_response):
+        if env["HTTP_HOST"].startswith('kindle.kreata.ee'):
+            import webob, urlparse
+            request = webob.Request(env)
+            scheme, netloc, path, query, fragment = urlparse.urlsplit(request.url)
+            url = urlparse.urlunsplit([scheme, 'www.bookweed.com', path, query, fragment])
+            start_response('301 Moved Permanently', [('Location', url)])
+            return ["301 Moved Peramanently",
+                  "Click Here %s" % url]
+        else:
+            return wsgi_app(env, start_response)
+    return redirect_if_needed
+
 def main():
     application = webapp.WSGIApplication([('/', MainHandler),
                                           ('/login', LoginHandler),
@@ -1121,6 +1135,7 @@ def main():
                                           ('/error', ErrorHandler),
                                           ('/flush', FlushHandler)],
                                          debug=True)
+    application = redirect_from_appspot(application)
     util.run_wsgi_app(application)
 
 

@@ -28,7 +28,7 @@
     {% ifequal book.conversion_status "OK" %}
 
         {% if book.conversion_key %}
-            <p class="download"><a href="/final-serve/export.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated <em>{{book.conversion_time}} GMT</em>)</p>
+            <p class="download"><a href="/final-serve/{{title|urlencode}}.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated <em>{{book.conversion_time}} GMT</em>)</p>
         {% endif %}
     
     {% else %}
