@@ -18,6 +18,8 @@
 {% if user %}
 <h3 class="underline">Your books</h3>
 <p class="bookdir"><a href="/books">Go to your books</a></p>
+{%else %}
+<p class="next"><a href="/login">Click here to continue</a></p>
 {% endif %}
 
 <div style="padding-top: 20px;">

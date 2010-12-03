@@ -243,6 +243,8 @@ def parse_html(html):
     
     md = html2markdown.html2text(html)
     title = get_title(re.sub(r'%%%[a-zA-Z]*?%%%','', md))
+
+    md = re.sub(r'>\s*\n','\n', md)
     
     md = md.replace('%%%BRBREAK%%%',"<br />")
     md = md.replace('%%%EMPTYP%%%',"<p>&nbsp;</p>")

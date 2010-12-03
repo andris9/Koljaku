@@ -6,7 +6,7 @@ p
 	text-indent: 0em
 }
 
-blockquote
+blockquote p
 {
     margin-left: 1em;
 }

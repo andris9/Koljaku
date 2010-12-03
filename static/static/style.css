@@ -221,6 +221,11 @@ table.formatted td, table.formatted th{
     padding-left: 18px;
 }
 
+.next{
+    background: url(/icons/105.png) no-repeat left center;
+    padding-left: 18px;
+}
+
 .remove{
     background: url(/icons/101.png) no-repeat left center;
     padding-left: 18px;
