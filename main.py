@@ -229,7 +229,7 @@ def gen_toc(book, chapters=None):
 
 def parse_html(html):
     # siin peaks olema ka muu loogika, lehevahetused jne
-    
+    logging.error(html)
     html = re.sub(r'<[bB][rR][^>]*?>','%%%BRBREAK%%%', html)
     html = re.sub(r'<[pP][^>]*?>(&nbsp;|\s)*?</[pP][^>]*?>','%%%EMPTYP%%%', html)
     html = re.sub(r'<[sS][uU][bB][^>]*?>','%%%SUBSTART%%%', html)
@@ -244,7 +244,9 @@ def parse_html(html):
     md = html2markdown.html2text(html)
     title = get_title(re.sub(r'%%%[a-zA-Z]*?%%%','', md))
 
-    md = re.sub(r'>\s*\n','\n', md)
+    md = re.sub(r'(\n>[^\r\n]*?)\r?\n',r'\1\n\n%%%REMOVEP%%%\n\n', md)
+
+    md = re.sub(r'\n>\s*\r?\n','\n', md)
     
     md = md.replace('%%%BRBREAK%%%',"<br />")
     md = md.replace('%%%EMPTYP%%%',"<p>&nbsp;</p>")
@@ -256,6 +258,7 @@ def parse_html(html):
 
     html = markdown2.markdown(md)
     html = re.sub(r'>\s*%%%ALIGN([a-zA-Z]*?)%%%',r' style="text-align: \1">', html)
+    html = re.sub(r'\n?<[pP]>\s*?%%%REMOVEP%%%\s*?</[pP]>\n?','', html)
     
     logging.error(html)
     return [html, title]
