@@ -30,7 +30,7 @@
   "de"    German
   "es"    Spanish
   -->
-    <dc:language>en-us</dc:language>
+    <dc:language>{% if book.language %}{{book.language}}{% else %}en-us{% endif %}</dc:language>
 
   <!-- Cover [mandatory]. The cover image must be specified in <manifest> and referenced from
   this <meta> element with a name="cover" attribute.

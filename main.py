@@ -29,6 +29,17 @@ from google.appengine.ext import blobstore
 from google.appengine.ext.webapp import blobstore_handlers
 
 ON_PAGE = 20
+languages = [
+        {
+            "code":"et",
+            "name":"Estonian"
+         },
+         {
+            "code":"en-us",
+            "name":"English"
+         },
+    ]
+
 
 class SiteUser(db.Model):
   user = db.UserProperty()
@@ -43,6 +54,7 @@ class Book(db.Model):
   author = db.StringProperty()
   description = db.StringProperty()
   isbn = db.StringProperty()
+  language = db.StringProperty(default="en-us")
   use_index = db.BooleanProperty(default = True)
   use_toc = db.BooleanProperty(default = True)
   use_copyright = db.BooleanProperty(default = True)
@@ -254,6 +266,9 @@ def parse_html(html):
     md = md.replace('%%%SUBEND%%%',"</sub>")
     md = md.replace('%%%SUPSTART%%%',"<sup>")
     md = md.replace('%%%SUPEND%%%',"</sup>")
+    
+    md = re.sub(r'(\r?\n\r?\n)  * ', r'\n', md)
+    
     logging.error(md)
 
     html = markdown2.markdown(md)
@@ -332,6 +347,9 @@ class BookAddHandler(webapp.RequestHandler):
         template_values["use_toc"] = self.request.get("use_toc", False)
         template_values["use_copyright"] = self.request.get("use_copyright", False)
         template_values["page_title"] = "Add book"
+        template_values["languages"] = languages
+        template_values["language"] = self.request.get("language", "en-us")
+        
         path = os.path.join(os.path.dirname(__file__), 'views/book_data.html')
         self.response.out.write(template.render(path, template_values))
 
@@ -358,6 +376,9 @@ class BookEditHandler(webapp.RequestHandler):
         template_values["use_toc"] = self.request.get("use_toc", book.use_toc)
         template_values["use_copyright"] = self.request.get("use_copyright", book.use_copyright)
         template_values["page_title"] = "Edit book"
+        
+        template_values["languages"] = languages
+        template_values["language"] = self.request.get("language", book.language) or "en-us"
         
         template_values["book"] = book
         template_values["cover_upload"] = blobstore.create_upload_url('/cover-upload')
@@ -416,6 +437,7 @@ class BookSaveHandler(webapp.RequestHandler):
         author = self.request.get("author",u"No author")
         description = self.request.get("description",u"")
         isbn = self.request.get("isbn",u"")
+        language = self.request.get("language",u"en-us")
 
         use_index = bool(self.request.get("use_index"))
         use_toc = bool(self.request.get("use_toc"))
@@ -428,6 +450,7 @@ class BookSaveHandler(webapp.RequestHandler):
             book.author = author
             book.description = description
             book.isbn = isbn
+            book.language = language
             
             book.use_index =  use_index
             book.use_toc = use_toc
@@ -448,6 +471,7 @@ class BookSaveHandler(webapp.RequestHandler):
             book.author = author
             book.description = description
             book.isbn = isbn
+            book.language = language
             
             book.use_index =  use_index
             book.use_toc = use_toc

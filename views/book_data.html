@@ -39,6 +39,17 @@
         <td><input type="text" class="data middle" name="isbn" value="{{isbn|escape}}" /></td>
     </tr>
     <tr>
+        <td>Language</td>
+        <td><select name="language">
+            {% for lang in languages %}
+            
+                <option value="{{lang.code}}" {% ifequal lang.code language %}selected="true"{% endifequal %}>{{lang.name|escape}}</option>
+            
+            {% endfor %}
+        </select></td>
+    </tr>
+    
+    <tr>
         <td colspan="2"><label><input type="checkbox" name="use_index" {% if use_index %}checked="true"{% endif %} /> use index page</label></td>
     </tr>
     <tr>
