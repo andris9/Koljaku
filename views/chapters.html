@@ -20,9 +20,9 @@
 <h2>{{book.title|escape}}</h2>
 
 {% if chapters %}
-<div class="conversion">
+<div class="conversion" id="generation">
 {% if book.converting %}
-<p><em>Generating ebook file... <a href="javascript:window.location.reload(true)">Refresh</a></em></p>
+<p class="wait"><em>Generating ebook file...</em></p>
 {% else %}
 
     {% ifequal book.conversion_status "OK" %}
@@ -38,13 +38,9 @@
         <pre>{{book.conversion_errors}}</pre>
         {% endifequal %}
     {% endifequal %}
-
-
-    <form id="vorm" method="post" action="/final-request?key={{book.key}}">
-        <p class="generate">
-            <a href="javascript:void(0)" onclick="document.getElementById('vorm').submit()">Generate a new e-book file</a>
-        </p>
-    </form>
+    <p class="generate">
+        <a href="javascript:void(0)" onclick="generate('{{book.key}}')">Generate a new e-book file</a>
+    </p>
 {% endif %}
 </div>
 {% else %}

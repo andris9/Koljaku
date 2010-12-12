@@ -226,6 +226,11 @@ table.formatted td, table.formatted th{
     padding-left: 18px;
 }
 
+.wait{
+    background: url(/static/images/wait.gif) no-repeat left center;
+    padding-left: 18px;
+}
+
 .remove{
     background: url(/icons/101.png) no-repeat left center;
     padding-left: 18px;

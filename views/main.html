@@ -3,7 +3,7 @@
     <head>
         <title>{% block title %}{% endblock %}</title>
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-        <link href="/static/style.css" rel="stylesheet" type="text/css" />
+        <link href="/static/style.css?1" rel="stylesheet" type="text/css" />
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
         <script src="http://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js"></script>
@@ -15,6 +15,28 @@
                 if(!element)return;
                 element.fade();
             }
+            var regenerate = false;
+            function generate(key){
+                if(regenerate)return false;
+                regenerate = true;
+                new Ajax.Request('/final-request?key='+key, {
+                    method: 'post',
+                    onSuccess: function(transport) {
+                    
+                        if (!transport.responseText.match(/OK/)){
+                            alert("Error!");
+                            regenerate = false;
+                        }else{
+                            new Ajax.PeriodicalUpdater('generation', '/chapterajax?key='+key, {
+                                method: 'get', frequency: 3, decay: 2, onSuccess:function(){
+                                    regenerate = false;
+                                }
+                            });
+                        }
+                    }
+                });
+            };
+            
         </script>
         
         <script type="text/javascript">

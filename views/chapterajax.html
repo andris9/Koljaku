@@ -1,0 +1,25 @@
+<div class="conversion">
+{% if book.converting %}
+    <p class="wait"><em>Generating ebook file...</em></p>
+{% else %}
+
+    {% ifequal book.conversion_status "OK" %}
+
+        {% if book.conversion_key %}
+            <p class="download"><a href="/final-serve/{{book.title|urlencode}}.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated <em>{{book.conversion_time}} GMT</em>)</p>
+        {% endif %}
+    
+    {% else %}
+        {% ifequal book.conversion_status "ERROR" %}
+        <p>E-book generation failed</p>
+        <p>Log:</p>
+        <pre>{{book.conversion_errors}}</pre>
+        {% endifequal %}
+    {% endifequal %}
+
+
+    <p class="generate">
+        <a href="javascript:void(0)" onclick="generate('{{book.key}}')">Generate a new e-book file</a>
+    </p>
+{% endif %}
+</div>

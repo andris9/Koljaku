@@ -546,6 +546,26 @@ class ChapterListHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'views/chapters.html')
         self.response.out.write(template.render(path, template_values))
         
+class ChapterAjaxHandler(webapp.RequestHandler):
+    def get(self):
+        user_data = get_user()
+        if not user_data:
+            return errorNotLoggedIn(self)
+
+        key = self.request.get("key", False)
+        book = get_book(key)
+        if not book:
+            return error404(self)
+        
+        chapters = get_chapters(book)
+        
+        template_values = gen_template_values(self)
+        template_values["book"] = book
+        template_values["chapters"] = chapters
+        template_values["specials"] = book.use_index or book.use_toc or book.use_copyright
+        logging.debug(book.use_index or book.use_toc or book.use_copyright)
+        path = os.path.join(os.path.dirname(__file__), 'views/chapterajax.html')
+        self.response.out.write(template.render(path, template_values))
 
 class ChapterIndexHandler(webapp.RequestHandler):
     def get(self):
@@ -1010,9 +1030,11 @@ class FinalRequestHandler(webapp.RequestHandler):
         
         if result.status_code==200:
             db.run_in_transaction(trns)
-            self.redirect("/chapters?key=%s" % key)
+            self.response.out.write("OK");
+            #self.redirect("/chapters?key=%s" % key)
         else:
-            self.redirect("/error?r=3")
+            self.response.out.write("ERROR");
+            #self.redirect("/error?r=3")
 
 class FinalErrorHandler(webapp.RequestHandler):
     def post(self):
@@ -1168,6 +1190,7 @@ def main():
                                           ('/book-remove', BookRemoveHandler),
                                           ('/book-preview', BookPreviewHandler),
                                           ('/chapters', ChapterListHandler),
+                                          ('/chapterajax', ChapterAjaxHandler),
                                           ('/chapter-index', ChapterIndexHandler),
                                           ('/chapter-toc', ChapterTOCHandler),
                                           ('/chapter-copyright', ChapterCopyrightHandler),
