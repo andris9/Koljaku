@@ -15,10 +15,11 @@
                 if(!element)return;
                 element.fade();
             }
-            var regenerate = false;
+            var regenerate = false, generaator = false;
             function generate(key){
                 if(regenerate)return false;
                 regenerate = true;
+                generaator = false;
                 new Ajax.Request('/final-request?key='+key, {
                     method: 'post',
                     onSuccess: function(transport) {
@@ -27,8 +28,8 @@
                             alert("Error!");
                             regenerate = false;
                         }else{
-                            new Ajax.PeriodicalUpdater('generation', '/chapterajax?key='+key, {
-                                method: 'get', frequency: 3, decay: 2, onSuccess:function(){
+                            generaator = new Ajax.PeriodicalUpdater('generation', '/chapterajax?key='+key, {
+                                method: 'get', frequency: 3, decay: 2, evalScripts: true, onSuccess:function(){
                                     regenerate = false;
                                 }
                             });
@@ -36,6 +37,13 @@
                     }
                 });
             };
+            
+            function genstop(url){
+                if(generaator){
+                    generaator.stop();
+                    window.location.href = url;
+                }
+            }
             
         </script>
         

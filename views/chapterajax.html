@@ -7,6 +7,7 @@
 
         {% if book.conversion_key %}
             <p class="download"><a href="/final-serve/{{book.title|urlencode}}.mobi?key={{book.key}}"><strong>Download generated e-book</strong></a> (generated <em>{{book.conversion_time}} GMT</em>)</p>
+            <script>genstop('/final-serve/{{book.title|urlencode}}.mobi?key={{book.key}}');</script>
         {% endif %}
     
     {% else %}
